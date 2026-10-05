@@ -1,0 +1,60 @@
+# ============================================================
+#  游戏合集站点 - Apache 配置
+# ============================================================
+# 兼容：InfinityFree / cPanel / 主流 Apache 虚拟主机
+# 原则：只加必要的，不确定的都包进 IfModule
+
+# ---- MIME 类型 ----
+# 确保 Unity WebGL 文件被正确识别
+AddType application/wasm .wasm
+AddType application/octet-stream .unityweb
+AddType application/octet-stream .part0 .part1 .part2 .part3 .part4 .part5
+AddType application/x-shockwave-flash .swf
+
+# ---- 禁止访问敏感文件 ----
+<FilesMatch "^(\.htaccess|\.htpasswd|\.git)">
+    Require all denied
+</FilesMatch>
+
+# ---- GZIP 压缩（只压缩文本类，二进制文件不压） ----
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# 二进制文件不压缩（已经是压缩格式）
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase Request_URI "\.unityweb$" no-gzip dont-vary
+    SetEnvIfNoCase Request_URI "\.part[0-9]+$" no-gzip dont-vary
+    SetEnvIfNoCase Request_URI "\.wasm$" no-gzip dont-vary
+    SetEnvIfNoCase Request_URI "\.swf$" no-gzip dont-vary
+</IfModule>
+
+# ---- 浏览器缓存 ----
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType text/javascript "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType application/json "access plus 7 days"
+    ExpiresByType application/octet-stream "access plus 30 days"
+    ExpiresByType application/wasm "access plus 30 days"
+    ExpiresByType application/x-shockwave-flash "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/gif "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType image/x-icon "access plus 30 days"
+    ExpiresDefault "access plus 7 days"
+</IfModule>
+
+# ---- 安全头 ----
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
