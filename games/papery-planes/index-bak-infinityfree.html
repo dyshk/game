@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Papery Planes</title>
+    <style>
+        /* ===== 全局重置 ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===== 页面基础 =====
+           全屏、深色背景、禁止滚动，让游戏画布占满整个视口 */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #231F20; /* Unity 游戏的默认背景色，避免白边 */
+        }
+
+        /* ===== 游戏容器 =====
+           占满全屏，内部 canvas 也强制 100% 填满 */
+        #gameContainer { width: 100%; height: 100%; position: relative; }
+        #gameContainer canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            /* 移动端：防止 canvas 因 DPR 太高超出显存导致黑屏 */
+            image-rendering: auto;
+        }
+
+        /* ===== 加载遮罩 =====
+           居中显示游戏标题和进度条，Unity 加载完成后淡出消失 */
+        #loading {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #231F20;
+            color: #fff;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading h1 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #ffb060; /* 游戏主题橙色 */
+            font-weight: 500;
+        }
+
+        /* 进度条外层轨道 */
+        .progress-wrap {
+            width: 240px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        /* 进度条内层填充 */
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #ffb060;
+            transition: width 0.3s ease;
+        }
+
+        #loading p {
+            font-size: 12px;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        /* ===== 返回主页按钮 =====
+           左上角悬浮，默认半透明，hover 时完全显示 */
+        #backBtn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 20;
+            width: 36px;
+            height: 36px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            opacity: 0.4;
+            transition: opacity 0.2s ease;
+        }
+        #backBtn:hover { opacity: 1; }
+        #backBtn svg {
+            width: 20px;
+            height: 20px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    </style>
+</head>
+<body>
+    <!-- 返回主页按钮 -->
+    <a href="../../index.html" id="backBtn" title="返回主页">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+
+    <!-- 加载遮罩（Unity 加载完成后自动隐藏） -->
+    <div id="loading">
+        <h1>Papery Planes</h1>
+        <div class="progress-wrap">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p id="loadingText">Loading...</p>
+    </div>
+
+    <!-- Unity 游戏画布容器 -->
+    <div id="gameContainer"></div>
+
+    <!-- Unity 加载器（Unity 官方提供，2019.1 版本） -->
+    <script src="UnityLoader.2019.1.js"></script>
+
+    <script>
+    /* ═══════════════════════════════════════════════════════════
+     *  Poki SDK 模拟
+     * ═══════════════════════════════════════════════════════════
+     *
+     * 【为什么需要】
+     *  这个游戏原本发布在 Poki 平台，游戏代码内部会调用 PokiSDK
+     *  播放广告、上报游戏事件等。如果不提供模拟实现，游戏会
+     *  因为找不到 PokiSDK 而报错或卡住。
+     *
+     * 【模拟原则】
+     *  - 所有方法都有返回值，不让游戏调用时报错
+     *  - 广告相关方法模拟"播放完成"，游戏可以正常继续
+     *  - 事件上报方法为空实现，不影响游戏逻辑
+     *  - 奖励广告（rewardedBreak）返回 true，让玩家拿到奖励
+     */
+    window.PokiSDK = {
+        init: function() { return Promise.resolve(); },
+        setDebug: function() {},
+        gameLoadingStart: function() {},
+        gameLoadingProgress: function() {},
+        gameLoadingFinished: function() {},
+        gameplayStart: function() {},
+        gameplayStop: function() {},
+        // 普通插屏广告：1秒后模拟播放完成
+        commercialBreak: function() {
+            return new Promise(function(r) { setTimeout(r, 1000); });
+        },
+        // 激励广告：1.5秒后模拟观看完成，返回 true（玩家获得奖励）
+        rewardedBreak: function() {
+            return new Promise(function(r) {
+                setTimeout(function() { r(true); }, 1500);
+            });
+        },
+        isAdBlocked: function() { return Promise.resolve(false); },
+        getURLParameter: function() { return null; },
+        shareableURL: function() { return Promise.resolve(location.href); },
+        captureErrors: function() {}
+    };
+
+    // 标记 Poki SDK 已就绪（游戏会检查这个变量）
+    window.pokiReady = true;
+
+    /**
+     * 初始化 Poki 桥接
+     * 游戏启动时会调用此函数，传入 Unity 中的桥接对象名
+     * 我们在这里注册广告回调，让 Unity 和 JS 能够双向通信
+     *
+     * @param {string} name - Unity 场景中桥接对象的名称
+     */
+    window.initPokiBridge = function(name) {
+        window.pokiBridge = name;
+
+        // 普通广告：播放完成后通知 Unity
+        window.commercialBreak = function() {
+            window.PokiSDK.commercialBreak().then(function() {
+                window.unityGame && window.unityGame.SendMessage(name, "commercialBreakCompleted");
+            });
+        };
+
+        // 激励广告：播放完成后通知 Unity，并传递是否看完
+        window.rewardedBreak = function() {
+            window.PokiSDK.rewardedBreak().then(function(e) {
+                window.unityGame && window.unityGame.SendMessage(name, "rewardedBreakCompleted", e.toString());
+            });
+        };
+
+        // 通知 Unity：Poki SDK 已准备就绪
+        window.unityGame && window.unityGame.SendMessage(name, "ready");
+    };
+
+    /* =========================================================
+     *  无限金币（修改 IndexedDB 中的 PlayerPrefs）
+     * =========================================================
+     *
+     *  原理：Unity WebGL 用 IndexedDB 存 PlayerPrefs（/idbfs/FILE_DATA）。
+     *  Unity 启动时把 PlayerPrefs 读到内存里，之后只用内存的副本，
+     *  所以必须在 Unity 启动之前改数据库，玩家才能看到满金币。
+     *
+     *  启动前策略：
+     *    用 indexedDB.databases() 检查数据库是否存在（无副作用）
+     *    - 存在：先改金币，再启动 Unity → 玩家看到 999999
+     *    - 不存在：不碰数据库，直接启动 → Unity 自己创建全新的，不会崩
+     *
+     *  运行时：每 15 秒补一次，防止玩家花金币后被游戏保存覆盖。
+     *  （运行时改的是数据库，内存里的值不变，但下次启动会生效）
+     *
+     *  PlayerPrefs 二进制格式（金币字段）：
+     *    05 43 6F 69 6E 73 FE [4字节小端序int]
+     *    ↑  ↑              ↑  ↑
+     *    |  "Coins"        |  金币值
+     *    键名长度5         int类型标记
+     *
+     *  注意：contents 必须保持原始类型（Uint8Array 或 ArrayBuffer），
+     *  改坏类型会导致 Unity "invalid handle for stdin" 崩溃。
+     */
+    function patchCoins(callback) {
+        try {
+            var req = indexedDB.open('/idbfs');
+            req.onsuccess = function(e) {
+                var db = e.target.result;
+                try {
+                    if (!db.objectStoreNames.contains('FILE_DATA')) {
+                        db.close(); callback && callback(false); return;
+                    }
+                    var tx = db.transaction('FILE_DATA', 'readwrite');
+                    var store = tx.objectStore('FILE_DATA');
+                    store.getAllKeys().onsuccess = function() {
+                        var keys = this.result, pk = null;
+                        for (var i = 0; i < keys.length; i++) {
+                            if (typeof keys[i] === 'string' &&
+                                keys[i].indexOf('PlayerPrefs') !== -1) {
+                                pk = keys[i]; break;
+                            }
+                        }
+                        if (!pk) { db.close(); callback && callback(false); return; }
+
+                        store.get(pk).onsuccess = function(ev) {
+                            var obj = ev.target.result;
+                            if (!obj || !obj.contents) {
+                                db.close(); callback && callback(false); return;
+                            }
+
+                            var data = new Uint8Array(obj.contents);
+                            var isAB = obj.contents instanceof ArrayBuffer;
+                            var changed = false;
+
+                            // 搜 "Coins" 字段：长度(5) + "Coins" + int标记(0xFE)
+                            for (var i = 0; i < data.length - 10; i++) {
+                                if (data[i] === 5 &&
+                                    data[i+1] === 67 && data[i+2] === 111 &&
+                                    data[i+3] === 105 && data[i+4] === 110 &&
+                                    data[i+5] === 115 && data[i+6] === 0xFE) {
+
+                                    var vi = i + 7;
+                                    var cur = data[vi] | (data[vi+1]<<8) |
+                                              (data[vi+2]<<16) | (data[vi+3]<<24);
+
+                                    if (cur < 990000) {
+                                        // 999999 = 0x000F423F 小端序
+                                        data[vi] = 0x3F; data[vi+1] = 0x42;
+                                        data[vi+2] = 0x0F; data[vi+3] = 0x00;
+                                        changed = true;
+                                    }
+                                    break;
+                                }
+                            }
+
+                            if (changed) {
+                                obj.contents = isAB ? data.buffer : data;
+                                obj.timestamp = new Date();
+                                store.put(obj, pk);
+                            }
+                            db.close();
+                            callback && callback(changed);
+                        };
+                    };
+                } catch(err) { db.close(); callback && callback(false); }
+            };
+            req.onupgradeneeded = function(e) {
+                // 数据库不存在/版本不对 → 中止，让 Unity 自己创建
+                e.target.transaction.abort();
+                callback && callback(false);
+            };
+        } catch(e) { callback && callback(false); }
+    }
+
+    /* ── 启动前检查并补金币 ──
+       用 indexedDB.databases() 先检查是否存在，
+       存在才改（不会创建新数据库），不存在直接启动。 */
+    function startGame() {
+        if (indexedDB.databases) {
+            indexedDB.databases().then(function(dbs) {
+                var exists = false;
+                for (var i = 0; i < dbs.length; i++) {
+                    if (dbs[i].name === '/idbfs') { exists = true; break; }
+                }
+                if (exists) {
+                    patchCoins(function() { initUnity(); });
+                } else {
+                    initUnity();
+                }
+            });
+        } else {
+            // 老浏览器不支持 databases()，直接启动
+            initUnity();
+        }
+    }
+
+    function initUnity() {
+    // 移动端兼容配置
+    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+    var unityParams = {
+        onProgress: function(inst, p) {
+            var pct = Math.round(p * 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('loadingText').textContent = 'Loading... ' + pct + '%';
+        },
+
+        Module: {
+            // 移动端限制内存，防止 OOM 导致黑屏
+            TOTAL_MEMORY: isMobile ? 256 * 1024 * 1024 : 512 * 1024 * 1024,
+
+            onRuntimeInitialized: function() {
+                setTimeout(function() {
+                    var el = document.getElementById('loading');
+                    el.style.opacity = '0';
+                    setTimeout(function() { el.style.display = 'none'; }, 500);
+                }, 800);
+
+                // 运行时每 15 秒补一次金币
+                setInterval(function() { patchCoins(); }, 15000);
+            }
+        }
+    };
+
+    // 移动端：优先用 WebGL 1.0（兼容性更好，减少黑屏概率）
+    // 桌面端：正常用 WebGL 2.0
+    if (isMobile) {
+        unityParams.Module.preferredWebGLVersion = 1;
+    }
+
+    window.unityGame = UnityLoader.instantiate(
+        "gameContainer",
+        "Build/ppw.json?v=24012020",
+        unityParams
+    );
+    }
+
+    // 开始游戏（先检查并补金币，再启动 Unity）
+    startGame();
+    </script>
+</body>
+</html>
