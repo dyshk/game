@@ -1,0 +1,20 @@
+# ============================================================
+#  Papery Planes - Build 目录配置
+# ============================================================
+#  将 .unityweb 请求转发到 unityweb.php，由 PHP 合并分块后输出。
+#  原因：InfinityFree 单文件限制 10MB，大文件需拆块上传。
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # 防止无限循环：已经是 unityweb.php 就不重写
+    RewriteCond %{REQUEST_URI} !unityweb\.php$
+
+    # 所有 .unityweb 请求 → unityweb.php 处理
+    RewriteRule ^(.+\.unityweb)$ unityweb.php?f=$1 [L,QSA]
+</IfModule>
+
+# 兜底 MIME 类型（重写没启用时用）
+AddType application/octet-stream .unityweb
+AddType application/octet-stream .part0 .part1 .part2 .part3 .part4 .part5
+AddType application/json .json
