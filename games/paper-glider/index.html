@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1CQ4D3VQ3L"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-1CQ4D3VQ3L');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Paper Glider: Fly a Paper Airplane Through Endless Rooms</title>
+
+<!-- Core -->
+<meta name="description" content="Paper airplane flying game — glide through endless rooms, thread floating rings, and dodge furniture in warm afternoon light. A free tribute to Glider PRO.">
+<meta name="keywords" content="paper airplane game, 3d flying game, glider pro, endless flyer, browser flight game, dodge furniture game, webgl game, paper plane simulator, casual arcade game, fly through house game">
+<meta name="author" content="Chris Pirillo">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#f2e3c8">
+<meta name="application-name" content="Paper Glider: Fly a Paper Airplane Through Endless Rooms">
+
+<!-- Mobile Web App -->
+<meta name="apple-mobile-web-app-title" content="Paper Glider: Fly a Paper Airplane Through Endless Rooms">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Chris Pirillo's Arcade">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Paper Glider: Fly a Paper Airplane Through Endless Rooms">
+<meta property="og:description" content="Paper airplane flying game — glide through endless rooms, thread floating rings, and dodge furniture in warm afternoon light. A free tribute to Glider PRO.">
+<meta property="og:url" content="https://arcade.pirillo.com/paper-glider.html">
+<meta property="og:image" content="https://arcade.pirillo.com/images/paper-glider.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Paper Glider: Fly a Paper Airplane Through Endless Rooms">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-07-12T12:00:00-07:00">
+<meta property="article:author" content="Chris Pirillo">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@ChrisPirillo">
+<meta name="twitter:creator" content="@ChrisPirillo">
+<meta name="twitter:title" content="Paper Glider: Fly a Paper Airplane Through Endless Rooms">
+<meta name="twitter:description" content="Paper airplane flying game — glide through endless rooms, thread floating rings, and dodge furniture in warm afternoon light. A free tribute to Glider PRO.">
+<meta name="twitter:image" content="https://arcade.pirillo.com/images/paper-glider.jpg">
+<meta name="twitter:domain" content="arcade.pirillo.com">
+<meta name="twitter:url" content="https://arcade.pirillo.com/paper-glider.html">
+
+<!-- Canonical & Icons -->
+<link rel="canonical" href="https://arcade.pirillo.com/paper-glider.html">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+
+<!-- Performance hints -->
+<link rel="dns-prefetch" href="https://www.googletagmanager.com">
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Karla:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:#f6ecd9;
+  --paper-deep:#ecdfc4;
+  --paper-edge:#dcc9a4;
+  --ink:#4a3f31;
+  --ink-soft:#7d6e58;
+  --accent:#e0704a;
+  --accent-deep:#c05335;
+  --shadow:rgba(88,66,38,.22);
+  --r-card:14px;
+  --r-btn:10px;
+  --sp-1:8px; --sp-2:16px; --sp-3:24px; --sp-4:32px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  font-family:'Karla',sans-serif;color:var(--ink);
+  background:#f2e3c8;
+  user-select:none;-webkit-user-select:none;
+  touch-action:none;
+}
+#scene{position:fixed;inset:0}
+#scene canvas{display:block;width:100%;height:100%}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:20;opacity:0;transition:opacity .35s ease}
+#hud.on{opacity:1}
+.paper-tag{
+  background:var(--paper);
+  border:1px solid var(--paper-edge);
+  border-radius:var(--r-btn);
+  box-shadow:0 3px 10px var(--shadow);
+  color:var(--ink);
+}
+#scoreTag{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%) rotate(-1deg);
+  padding:6px 18px 8px;text-align:center;min-width:104px;
+}
+#scoreTag .lbl{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+#score{font-family:'Fraunces',serif;font-size:clamp(24px,5vw,32px);font-weight:700;line-height:1.05}
+#streakChip{
+  position:absolute;top:76px;left:50%;transform:translateX(-50%) rotate(1.5deg) scale(0);
+  padding:3px 12px 4px;font-weight:700;font-size:14px;color:#fff;
+  background:var(--accent);border-radius:999px;box-shadow:0 3px 8px var(--shadow);
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1);
+}
+#streakChip.on{transform:translateX(-50%) rotate(1.5deg) scale(1)}
+#floaters{position:absolute;inset:0;overflow:hidden}
+.floater{
+  position:absolute;font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--accent-deep);
+  text-shadow:0 1px 0 rgba(255,255,255,.7);
+  animation:floatUp 1s ease-out forwards;
+}
+@keyframes floatUp{
+  0%{opacity:0;transform:translate(-50%,6px) scale(.7)}
+  18%{opacity:1;transform:translate(-50%,-4px) scale(1.06)}
+  100%{opacity:0;transform:translate(-50%,-58px) scale(1)}
+}
+
+/* corner buttons */
+#cornerBtns{position:fixed;top:12px;right:12px;z-index:40;display:flex;gap:10px}
+#backBtn{position:fixed;top:12px;left:12px;z-index:40;pointer-events:auto}
+#backBtn a{
+  width:44px;height:44px;border:1px solid var(--paper-edge);border-radius:var(--r-btn);
+  background:var(--paper);color:var(--ink);cursor:pointer;
+  box-shadow:0 3px 8px var(--shadow);
+  display:flex;align-items:center;justify-content:center;
+  text-decoration:none;font-size:20px;font-weight:700;
+  transition:background .15s ease,transform .15s ease;
+}
+#backBtn a:hover{background:var(--paper-deep);transform:translateY(-1px)}
+#backBtn a:active{transform:scale(.95)}
+#backBtn a svg{width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.corner-btn{
+  width:44px;height:44px;border:1px solid var(--paper-edge);border-radius:var(--r-btn);
+  background:var(--paper);color:var(--ink);cursor:pointer;
+  box-shadow:0 3px 8px var(--shadow);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif;font-size:20px;font-weight:700;
+  transition:background .15s ease,transform .15s ease;pointer-events:auto;
+}
+.corner-btn:hover{background:var(--paper-deep);transform:translateY(-1px)}
+.corner-btn:active{transform:scale(.95)}
+.corner-btn svg{width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.corner-btn.muted svg .wave{display:none}
+.corner-btn.muted svg .slash{display:block}
+.corner-btn svg .slash{display:none}
+/* 无敌模式按钮 */
+.corner-btn.god-on{
+  background:linear-gradient(135deg,#ffd700,#ff9800);
+  border-color:#ff9800;
+  color:#5a3d00;
+  box-shadow:0 0 16px rgba(255,215,0,0.6);
+}
+.corner-btn.god-on svg{stroke:#5a3d00}
+
+/* ---------- Screens ---------- */
+.screen{
+  position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  padding:max(var(--sp-3), env(safe-area-inset-top)) var(--sp-3)
+          max(var(--sp-3), env(safe-area-inset-bottom));
+  background:radial-gradient(ellipse at 50% 42%,rgba(255,244,220,.18),rgba(120,90,52,.34));
+  opacity:0;pointer-events:none;transition:opacity .4s ease;
+}
+.screen.on{opacity:1;pointer-events:auto}
+.card{
+  background:var(--paper);
+  border:1px solid var(--paper-edge);
+  border-radius:var(--r-card);
+  box-shadow:0 14px 44px rgba(70,50,24,.35),0 2px 6px var(--shadow);
+  padding:var(--sp-4) clamp(24px,6vw,48px);
+  max-width:440px;width:100%;text-align:center;position:relative;
+  transform:rotate(-.6deg);
+}
+.card::after{ /* folded corner */
+  content:"";position:absolute;top:0;right:0;width:26px;height:26px;
+  background:linear-gradient(225deg,transparent 50%,var(--paper-deep) 50%);
+  border-bottom-left-radius:8px;border-top-right-radius:var(--r-card);
+}
+h2.title{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(34px,8vw,48px);line-height:1.05;letter-spacing:-.01em}
+.subtitle{margin-top:10px;font-size:15px;color:var(--ink-soft);line-height:1.5}
+.best-tab{
+  display:none;margin:18px auto 0;width:max-content;
+  padding:4px 14px 5px;font-size:13px;font-weight:700;color:var(--ink);
+  background:var(--paper-deep);border:1px dashed var(--paper-edge);border-radius:999px;
+  transform:rotate(1deg);
+}
+.best-tab.show{display:block}
+.btn-fly{
+  margin-top:22px;display:inline-block;min-width:180px;
+  padding:14px 34px 15px;border:none;border-radius:var(--r-btn);cursor:pointer;
+  background:var(--accent);color:#fff8ef;
+  font-family:'Fraunces',serif;font-size:22px;font-weight:700;letter-spacing:.02em;
+  box-shadow:0 5px 0 var(--accent-deep),0 10px 22px rgba(192,83,53,.4);
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.btn-fly:hover{transform:translateY(-2px);box-shadow:0 7px 0 var(--accent-deep),0 14px 26px rgba(192,83,53,.42)}
+.btn-fly:active{transform:translateY(3px);box-shadow:0 2px 0 var(--accent-deep),0 6px 14px rgba(192,83,53,.35)}
+.hint{margin-top:16px;font-size:13px;color:var(--ink-soft)}
+.hint b{color:var(--ink)}
+#newBest{
+  display:none;position:absolute;top:-14px;left:-12px;transform:rotate(-8deg);
+  background:var(--accent);color:#fff8ef;font-weight:700;font-size:13px;
+  padding:5px 14px 6px;border-radius:999px;box-shadow:0 4px 10px rgba(192,83,53,.45);
+}
+#newBest.show{display:block;animation:stampIn .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes stampIn{0%{transform:rotate(-8deg) scale(0)}100%{transform:rotate(-8deg) scale(1)}}
+#overScoreRow{margin-top:18px;display:flex;justify-content:center;gap:14px;align-items:baseline}
+#overScoreRow .big{font-family:'Fraunces',serif;font-size:52px;font-weight:700;line-height:1}
+#overScoreRow .sml{font-size:14px;color:var(--ink-soft)}
+#crashLine{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(26px,6vw,34px);line-height:1.15}
+
+/* ---------- Help / FAQ modals ---------- */
+.modal{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(58,42,22,.55);backdrop-filter:blur(3px);
+  padding:max(var(--sp-2), env(safe-area-inset-top)) var(--sp-2)
+          max(var(--sp-2), env(safe-area-inset-bottom));
+  touch-action:pan-y;
+}
+.modal.hidden{display:none}
+#overScreen{backdrop-filter:blur(9px) saturate(.85);-webkit-backdrop-filter:blur(9px) saturate(.85)}
+#helpModal{z-index:50}
+#faqModal{z-index:60}
+.modal-card{
+  background:var(--paper);border:1px solid var(--paper-edge);border-radius:var(--r-card);
+  box-shadow:0 16px 48px rgba(60,42,18,.45);
+  padding:var(--sp-3) var(--sp-3) var(--sp-3);
+  max-width:430px;width:100%;max-height:85vh;position:relative;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;
+  text-align:left;
+}
+@supports (max-height:85dvh){ .modal-card{max-height:85dvh} }
+.modal-card h2{font-family:'Fraunces',serif;font-size:24px;margin-bottom:10px}
+.modal-card p.desc{font-size:14px;line-height:1.55;color:var(--ink-soft);margin-bottom:var(--sp-2)}
+.modal-close{
+  position:absolute;top:8px;right:8px;width:44px;height:44px;border:none;border-radius:10px;
+  background:transparent;color:var(--ink-soft);font-size:18px;cursor:pointer;line-height:1;
+}
+.modal-close:hover{background:var(--paper-deep);color:var(--ink)}
+.faq-open-btn{
+  width:100%;text-align:left;padding:11px 14px;margin-bottom:var(--sp-2);
+  background:var(--paper-deep);border:1px solid var(--paper-edge);border-radius:var(--r-btn);
+  font-family:'Karla',sans-serif;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;
+  transition:background .15s ease;
+}
+.faq-open-btn:hover{background:#e4d4b4}
+.related-label{
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+  font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
+}
+.related-label::after{content:"";flex:1;height:1px;background:var(--paper-edge)}
+.related-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--sp-3);
+}
+.related-chip{
+  display:flex;flex-direction:column;gap:2px;min-height:56px;justify-content:center;
+  padding:10px 12px;border-radius:var(--r-btn);text-decoration:none;
+  background:var(--paper-deep);border:1px dashed var(--paper-edge);
+  box-shadow:0 2px 5px rgba(70,50,24,.10);
+  transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.related-chip:nth-child(odd){transform:rotate(-.7deg)}
+.related-chip:nth-child(even){transform:rotate(.7deg)}
+.related-chip:hover{transform:rotate(0) translateY(-2px);background:#efe0c0;box-shadow:0 6px 14px rgba(70,50,24,.18)}
+.related-chip:active{transform:rotate(0) translateY(0)}
+.rc-name{font-family:'Fraunces',serif;font-size:14px;font-weight:700;color:var(--ink);line-height:1.15}
+.rc-sub{font-size:11px;color:var(--ink-soft);letter-spacing:.02em}
+.link-list{list-style:none}
+.link-list li+li{margin-top:8px}
+.link-list a{
+  display:block;padding:10px 14px;border-radius:var(--r-btn);
+  background:rgba(255,255,255,.55);border:1px solid var(--paper-edge);
+  color:var(--ink);text-decoration:none;font-size:14px;font-weight:600;
+  transition:background .15s ease,transform .15s ease;
+}
+.link-list a:hover{background:#fff;transform:translateX(2px)}
+.faq-item{border-radius:var(--r-btn);overflow:hidden}
+.faq-item+.faq-item{margin-top:8px}
+.faq-item summary{
+  cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:11px 14px;background:var(--paper-deep);border:1px solid var(--paper-edge);border-radius:var(--r-btn);
+  font-size:14px;font-weight:700;
+}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary .chev{transition:transform .2s ease;color:var(--ink-soft);flex-shrink:0}
+.faq-item[open] summary .chev{transform:rotate(180deg)}
+.faq-item .faq-answer{padding:10px 14px 12px;font-size:13px;line-height:1.55;color:var(--ink-soft);user-select:text;-webkit-user-select:text}
+.faq-answer a{color:var(--accent-deep);font-weight:600}
+
+/* WebGL fail state */
+#glFail{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:var(--sp-3);background:#f2e3c8}
+#glFail .card{transform:none}
+
+@media (max-width:480px){
+  #scoreTag{top:calc(10px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left));transform:rotate(-1deg)}
+  #cornerBtns{top:calc(10px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right))}
+  .card{padding:var(--sp-3) var(--sp-2)}
+  .btn-fly{min-width:0;width:100%;padding:16px 24px 17px}
+  .related-grid{grid-template-columns:1fr}
+  .related-chip{transform:none}
+}
+/* landscape phone: short viewport, keep the card fully visible */
+@media (max-height:460px) and (orientation:landscape){
+  .card{padding:var(--sp-2) var(--sp-3);max-height:92vh;overflow-y:auto;touch-action:pan-y}
+  h2.title{font-size:30px}
+  .subtitle{font-size:13px;margin-top:6px}
+  .btn-fly{margin-top:12px;padding:11px 26px 12px;font-size:19px}
+  .hint{margin-top:8px}
+  #overScoreRow{margin-top:10px}
+  #overScoreRow .big{font-size:38px}
+  .modal-card{max-height:92vh}
+}
+</style>
+</head>
+<body>
+<h1 class="hidden-h1" style="display:none">Paper Glider: Fly a Paper Airplane Through Endless Rooms</h1>
+
+<div id="scene" aria-hidden="true"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="scoreTag" class="paper-tag"><span class="lbl">Score</span><span id="score">0</span></div>
+  <div id="streakChip">&times;1</div>
+  <div id="floaters"></div>
+</div>
+
+<div id="backBtn">
+  <a href="../../index.html" aria-label="返回主页" title="返回主页">
+    <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+</div>
+
+<div id="cornerBtns">
+  <button id="godBtn" class="corner-btn" aria-label="无敌模式" title="无敌模式（不怕撞）">
+    <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5.5 3.8 10.7 8 12 4.2-1.3 8-6.5 8-12V6l-8-4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <button id="muteBtn" class="corner-btn" aria-label="Mute sound" title="Mute sound">
+    <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 9c1.2 1 1.2 5 0 6"/><path class="wave" d="M18.5 7c2.2 2 2.2 8 0 10"/><path class="slash" d="M19 9l-4 6M15 9l4 6"/></svg>
+  </button>
+  <button id="helpBtn" class="corner-btn" aria-label="Help and about" title="Help and about">?</button>
+</div>
+
+<!-- Start screen -->
+<div id="startScreen" class="screen on">
+  <div class="card">
+    <h2 class="title">Paper Glider</h2>
+    <p class="subtitle">Fly a paper airplane through a warm afternoon house. Thread the rings. Mind the furniture.</p>
+    <div id="bestTabStart" class="best-tab">Best 0</div>
+    <button id="flyBtn" class="btn-fly">Fly</button>
+    <p class="hint" id="controlHint">Steer with your <b>mouse</b> &middot; press <b>Space</b> to launch</p>
+  </div>
+</div>
+
+<!-- Game over screen -->
+<div id="overScreen" class="screen">
+  <div class="card">
+    <div id="newBest">New best!</div>
+    <div id="crashLine">You met a bookshelf.</div>
+    <div id="overScoreRow">
+      <span class="big" id="overScore">0</span>
+      <span class="sml" id="overBest">best 0</span>
+    </div>
+    <button id="againBtn" class="btn-fly">Fly Again</button>
+    <p class="hint">or press <b>Space</b></p>
+  </div>
+</div>
+
+<!-- WebGL failure -->
+<div id="glFail">
+  <div class="card">
+    <h2 class="title" style="font-size:30px">No lift today</h2>
+    <p class="subtitle">Paper Glider needs WebGL to fly, and your browser has it switched off. Try updating your browser or turning on hardware acceleration in its settings.</p>
+  </div>
+</div>
+
+<!-- Help modal -->
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="About Paper Glider">
+  <div class="modal-card">
+    <button class="modal-close" aria-label="Close help" onclick="toggleHelp(false)">&#10005;</button>
+    <h2>Paper Glider</h2>
+    <p class="desc intro">A paper airplane flying game set in an endless, sunlit house. Move your mouse or drag to steer, glide through floating rings for points, and keep your streak alive between rooms. Every room is generated fresh, so no two flights are the same. A browser tribute to the classic Mac game Glider PRO.</p>
+    <button class="faq-open-btn" onclick="toggleFaq(true)">Frequently Asked Questions &rarr;</button>
+    <p class="related-label"><span>More flying games</span></p>
+    <div class="related-grid">
+      <a class="related-chip" href="https://arcade.pirillo.com/stratos-skysweeper.html">
+        <span class="rc-name">Stratos Skysweeper</span><span class="rc-sub">Cloud flight</span></a>
+      <a class="related-chip" href="https://arcade.pirillo.com/mid-canyon.html">
+        <span class="rc-name">Mid Canyon</span><span class="rc-sub">Trench run</span></a>
+      <a class="related-chip" href="https://arcade.pirillo.com/makerdeck-flappament.html">
+        <span class="rc-name">Flappament</span><span class="rc-sub">One button</span></a>
+      <a class="related-chip" href="https://arcade.pirillo.com/road-rage.html">
+        <span class="rc-name">Road Rage</span><span class="rc-sub">Dodge traffic</span></a>
+    </div>
+    <ul class="link-list">
+      <li><a href="https://arcade.pirillo.com/" target="_blank" rel="noopener">More of My Apps</a></li>
+      <li><a href="https://chris.pirillo.com/" target="_blank" rel="noopener">Follow Chris Pirillo</a></li>
+      <li><a href="https://ctrlaltcreate.live/" target="_blank" rel="noopener">Learn How to Make Apps</a></li>
+      <li><a href="https://www.paypal.com/donate/?hosted_button_id=UMWCDWGVXVHZU" target="_blank" rel="noopener">Donate to Me Here</a></li>
+      <li><a href="https://patreon.com/ChrisPirillo" target="_blank" rel="noopener">Support My Patreon</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- FAQ modal (nested above help) -->
+<div id="faqModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Frequently asked questions">
+  <div class="modal-card faq-list">
+    <button class="modal-close" aria-label="Close FAQ" onclick="toggleFaq(false)">&#10005;</button>
+    <h2>Frequently Asked Questions</h2>
+    <details class="faq-item">
+      <summary><span>What is Paper Glider?</span><span class="chev">&#9662;</span></summary>
+      <p class="faq-answer">Paper Glider is a free 3D paper airplane flying game that runs in your browser. You steer a paper plane through an endless series of warmly lit rooms, collecting floating rings for points while avoiding tables, bookshelves, lamps, and walls.</p>
+    </details>
+    <details class="faq-item">
+      <summary><span>How do I steer the paper airplane?</span><span class="chev">&#9662;</span></summary>
+      <p class="faq-answer">On desktop, the plane follows your mouse. On a phone or tablet, touch anywhere and drag to steer. Arrow keys and WASD also work. Press Space to launch or to fly again after a crash.</p>
+    </details>
+    <details class="faq-item">
+      <summary><span>How does scoring work?</span><span class="chev">&#9662;</span></summary>
+      <p class="faq-answer">Each ring you fly through is worth 10 points times your streak. Consecutive rings raise the streak up to x5; missing a ring resets it. The plane speeds up the longer you survive, and your best score is saved on your device.</p>
+    </details>
+    <details class="faq-item">
+      <summary><span>Is Paper Glider free?</span><span class="chev">&#9662;</span></summary>
+      <p class="faq-answer">Yes, completely free. No account, no ads, no watermarks, and no time limits. Just open the page and fly.</p>
+    </details>
+    <details class="faq-item">
+      <summary><span>Does Paper Glider collect my data?</span><span class="chev">&#9662;</span></summary>
+      <p class="faq-answer">No. The whole game runs locally in your browser with JavaScript and WebGL. Your best score is stored on your own device and nothing you do is uploaded anywhere.</p>
+    </details>
+    <details class="faq-item">
+      <summary><span>Is this like the classic Mac game Glider PRO?</span><span class="chev">&#9662;</span></summary>
+      <p class="faq-answer">It is a loving tribute. Glider PRO by Casady &amp; Greene had you pilot a paper airplane through the rooms of a house in 2D. Paper Glider reimagines that idea in 3D with procedural rooms, rings, and modern browser graphics, and it needs no download or emulator.</p>
+    </details>
+    <details class="faq-item">
+      <summary><span>How are the rooms generated?</span><span class="chev">&#9662;</span></summary>
+      <p class="faq-answer">Every room is assembled on the fly from a small kit of reusable pieces: furniture layouts, doorway positions, window light, and ring paths. The generator always leaves a flyable route and places rings that trace it, so a crash is never the room's fault.</p>
+    </details>
+    <details class="faq-item">
+      <summary><span>What other flying games can I play here?</span><span class="chev">&#9662;</span></summary>
+      <p class="faq-answer">Try <a href="https://arcade.pirillo.com/stratos-skysweeper.html">Stratos Skysweeper</a> for serene cloud flight, <a href="https://arcade.pirillo.com/mid-canyon.html">Mid Canyon</a> for a sci-fi trench run, <a href="https://arcade.pirillo.com/makerdeck-flappament.html">Flappament</a> for one-button flying, or <a href="https://arcade.pirillo.com/road-rage.html">Road Rage</a> for high-speed dodging.</p>
+    </details>
+  </div>
+</div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Paper Glider",
+  "url": "https://arcade.pirillo.com/paper-glider.html",
+  "description": "Paper airplane flying game — glide through endless rooms, thread floating rings, and dodge furniture in warm afternoon light. A free tribute to Glider PRO.",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires a modern browser with JavaScript and WebGL enabled",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock"
+  },
+  "creator": {
+    "@type": "Person",
+    "name": "Chris Pirillo",
+    "url": "https://pirillo.com",
+    "sameAs": [
+      "https://www.linkedin.com/in/chrispirillo",
+      "https://x.com/chrispirillo",
+      "https://www.youtube.com/@chrispirillo",
+      "https://bsky.app/profile/chrispirillo.com",
+      "https://mastodon.social/@ChrisPirillo",
+      "https://www.threads.net/@chrispirillo",
+      "https://pirillo.com",
+      "https://chris.pirillo.com"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Pirillo Arcade",
+    "url": "https://arcade.pirillo.com"
+  },
+  "datePublished": "2026-07-12",
+  "dateModified": "2026-07-12",
+  "image": "https://arcade.pirillo.com/images/paper-glider.jpg",
+  "inLanguage": "en"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "url": "https://arcade.pirillo.com/paper-glider.html",
+  "name": "Paper Glider: Fly a Paper Airplane Through Endless Rooms",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".hidden-h1", ".intro", ".faq-item summary", ".faq-item .faq-answer"]
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What is Paper Glider?","acceptedAnswer":{"@type":"Answer","text":"Paper Glider is a free 3D paper airplane flying game that runs in your browser. You steer a paper plane through an endless series of warmly lit rooms, collecting floating rings for points while avoiding tables, bookshelves, lamps, and walls."}},
+    {"@type":"Question","name":"How do I steer the paper airplane?","acceptedAnswer":{"@type":"Answer","text":"On desktop, the plane follows your mouse. On a phone or tablet, touch anywhere and drag to steer. Arrow keys and WASD also work. Press Space to launch or to fly again after a crash."}},
+    {"@type":"Question","name":"How does scoring work?","acceptedAnswer":{"@type":"Answer","text":"Each ring you fly through is worth 10 points times your streak. Consecutive rings raise the streak up to x5; missing a ring resets it. The plane speeds up the longer you survive, and your best score is saved on your device."}},
+    {"@type":"Question","name":"Is Paper Glider free?","acceptedAnswer":{"@type":"Answer","text":"Yes, completely free. No account, no ads, no watermarks, and no time limits. Just open the page and fly."}},
+    {"@type":"Question","name":"Does Paper Glider collect my data?","acceptedAnswer":{"@type":"Answer","text":"No. The whole game runs locally in your browser with JavaScript and WebGL. Your best score is stored on your own device and nothing you do is uploaded anywhere."}},
+    {"@type":"Question","name":"Is this like the classic Mac game Glider PRO?","acceptedAnswer":{"@type":"Answer","text":"It is a loving tribute. Glider PRO by Casady & Greene had you pilot a paper airplane through the rooms of a house in 2D. Paper Glider reimagines that idea in 3D with procedural rooms, rings, and modern browser graphics, and it needs no download or emulator."}},
+    {"@type":"Question","name":"How are the rooms generated?","acceptedAnswer":{"@type":"Answer","text":"Every room is assembled on the fly from a small kit of reusable pieces: furniture layouts, doorway positions, window light, and ring paths. The generator always leaves a flyable route and places rings that trace it, so a crash is never the room's fault."}},
+    {"@type":"Question","name":"What other flying games can I play here?","acceptedAnswer":{"@type":"Answer","text":"Try Stratos Skysweeper for serene cloud flight, Mid Canyon for a sci-fi trench run, Flappament for one-button flying, or Road Rage for high-speed dodging, all free at arcade.pirillo.com."}}
+  ]
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   Paper Glider — a 3D paper airplane flight through an endless,
+   sunlit papercraft house. World scrolls toward a fixed plane.
+   ============================================================ */
+
+// ---------- tiny helpers ----------
+const clamp = (v,a,b)=>v<a?a:(v>b?b:v);
+const lerp  = (a,b,t)=>a+(b-a)*t;
+const rand  = (a,b)=>a+Math.random()*(b-a);
+const pick  = arr=>arr[Math.floor(Math.random()*arr.length)];
+const $ = id=>document.getElementById(id);
+
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+
+// ---------- DOM ----------
+const el = {
+  scene:$('scene'), hud:$('hud'), score:$('score'), streak:$('streakChip'),
+  floaters:$('floaters'), start:$('startScreen'), over:$('overScreen'),
+  flyBtn:$('flyBtn'), againBtn:$('againBtn'), crashLine:$('crashLine'),
+  overScore:$('overScore'), overBest:$('overBest'), newBest:$('newBest'),
+  bestTabStart:$('bestTabStart'), controlHint:$('controlHint'),
+  muteBtn:$('muteBtn'), helpBtn:$('helpBtn'), glFail:$('glFail')
+};
+
+// ---------- constants ----------
+const ROOM_W = 13, ROOM_H = 9, ROOM_L = 26;
+const BOUND_X = 4.7, BOUND_Y_LO = 0.9, BOUND_Y_HI = 7.5;
+const PLANE_R = 0.34;           // forgiving collision radius (visual span ~2)
+const RING_R  = 1.7;            // torus radius 1.1 plus wingspan forgiveness
+const SPEED_BASE = 13, SPEED_MAX = 30, SPEED_MENU = 6;
+const SPAWN_DEPTH = -96;        // keep rooms built out to here
+const GRACE_TIME = 1.2;         // no collisions right after launch
+
+// ---------- state ----------
+let state = 'menu';             // menu | playing | crashed | over
+let renderer, scene, camera;
+let speed = SPEED_MENU, playT = 0, graceUntil = 0;
+let score = 0, streak = 1, best = parseInt(store.get('paperglider_best')||'0',10)||0;
+let crashLabel = '';
+let godMode = store.get('paperglider_god') === '1';
+let overShownAt = 0;
+let lastPattern = '';
+
+// ---------- renderer / scene ----------
+let three_ok = true;
+try{
+  renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+  const test = renderer.getContext && renderer.getContext();
+  if(!test) throw new Error('no gl context');
+}catch(e){
+  three_ok = false;
+  el.glFail.style.display = 'flex';
+  el.start.classList.remove('on');
+}
+if(!three_ok) return;
+
+let dprCap = Math.min(window.devicePixelRatio||1, 2);
+let dprNow = dprCap;
+renderer.setPixelRatio(dprNow);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0xf6e7cd);
+el.scene.appendChild(renderer.domElement);
+
+scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xf6e7cd, 20, 62);
+
+camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, 0.1, 140);
+camera.position.set(0, 3.6, 7.2);
+
+const hemi = new THREE.HemisphereLight(0xfff2dc, 0xc9a97e, 1.05);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe3bc, 0.5);
+sun.position.set(9, 8, 5);
+scene.add(sun);
+
+if(window.visualViewport) window.visualViewport.addEventListener('resize', ()=>window.dispatchEvent(new Event('resize')));
+window.addEventListener('orientationchange', ()=>setTimeout(()=>window.dispatchEvent(new Event('resize')), 250));
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ---------- procedural paper + wood textures ----------
+function makeCanvas(size, painter){
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  if(ctx) painter(ctx, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+const paperTex = makeCanvas(256, (ctx,s)=>{
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,s,s);
+  for(let i=0;i<2600;i++){
+    const g = 235 + Math.floor(Math.random()*20);
+    ctx.fillStyle = 'rgba('+g+','+(g-4)+','+(g-14)+',0.5)';
+    ctx.fillRect(Math.random()*s, Math.random()*s, 1.6, 1.1);
+  }
+  ctx.strokeStyle = 'rgba(190,170,135,0.10)';
+  for(let i=0;i<40;i++){
+    ctx.beginPath();
+    const y = Math.random()*s;
+    ctx.moveTo(0,y); ctx.bezierCurveTo(s*.3,y+rand(-9,9), s*.7,y+rand(-9,9), s,y);
+    ctx.stroke();
+  }
+});
+const woodTex = makeCanvas(256, (ctx,s)=>{
+  ctx.fillStyle = '#d9a86c'; ctx.fillRect(0,0,s,s);
+  for(let p=0;p<8;p++){
+    ctx.fillStyle = 'rgba(140,95,50,0.35)';
+    ctx.fillRect(0, p*32, s, 2);
+    for(let g=0; g<22; g++){
+      ctx.fillStyle = 'rgba(150,105,60,'+ (0.05+Math.random()*0.1) +')';
+      ctx.fillRect(Math.random()*s, p*32+2+Math.random()*28, rand(14,80), 1);
+    }
+  }
+});
+woodTex.repeat.set(2, 4);
+
+// ---------- materials (shared) ----------
+const M = {
+  walls: ['#f3e6cc','#efe0c0','#f1e7d4','#ecd9bd'].map(c=>
+    new THREE.MeshLambertMaterial({ color:c, map:paperTex })),
+  // the far (left) wall is the shadow side of the room: cooler and a step darker
+  wallsShade: ['#cdbfa6','#c8b89c','#cbc0ae','#c3b195'].map(c=>
+    new THREE.MeshLambertMaterial({ color:c, map:paperTex })),
+  ceiling: new THREE.MeshLambertMaterial({ color:'#e9dcc4', map:paperTex }),
+  floor:  new THREE.MeshLambertMaterial({ color:'#e0b47c', map:woodTex }),
+  trim:   new THREE.MeshLambertMaterial({ color:'#e7d5ae' }),
+  walnut: new THREE.MeshLambertMaterial({ color:'#8a5a37' }),
+  walnutDark: new THREE.MeshLambertMaterial({ color:'#6e4629' }),
+  sage:   new THREE.MeshLambertMaterial({ color:'#93a184' }),
+  dusty:  new THREE.MeshLambertMaterial({ color:'#7f93a8' }),
+  cream:  new THREE.MeshLambertMaterial({ color:'#f0e6d0', map:paperTex }),
+  clay:   new THREE.MeshLambertMaterial({ color:'#b7734f' }),
+  brass:  new THREE.MeshLambertMaterial({ color:'#a8813f' }),
+  cord:   new THREE.MeshLambertMaterial({ color:'#4a3a28' }),
+  domeOut:new THREE.MeshLambertMaterial({ color:'#7d5a3c' }),
+  domeIn: new THREE.MeshLambertMaterial({ color:'#f6dcae', emissive:0xd8a75c, emissiveIntensity:0.5 }),
+  bulb:   new THREE.MeshBasicMaterial({ color:0xffe9b8 }),
+  lampBeam: new THREE.MeshBasicMaterial({ vertexColors:true, transparent:true, opacity:0.5,
+              blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide }),
+  lampPool: new THREE.MeshBasicMaterial({ vertexColors:true, transparent:true, opacity:0.55,
+              blending:THREE.AdditiveBlending, depthWrite:false }),
+  leaf:   new THREE.MeshLambertMaterial({ color:'#7d9469' }),
+  ring:   new THREE.MeshLambertMaterial({ color:'#e0704a', emissive:0xb14a24, emissiveIntensity:0.42 }),
+  glass:  new THREE.MeshBasicMaterial({ color:0xffe9b0 }),
+  plane:  new THREE.MeshLambertMaterial({ color:'#fbf6ea', map:paperTex, side:THREE.DoubleSide }),
+  rug:    new THREE.MeshLambertMaterial({ color:'#c98a63' }),
+  frameArt: new THREE.MeshLambertMaterial({ color:'#a8b5a0' })
+};
+M.shade = new THREE.MeshLambertMaterial({ color:'#f2dcae', emissive:0x6a5324, side:THREE.DoubleSide });
+const bookMats = ['#b7734f','#93a184','#7f93a8','#c9a35a','#8a5a37'].map(c=>new THREE.MeshLambertMaterial({color:c}));
+
+// ---------- shared geometries ----------
+const G = {
+  unit: new THREE.BoxGeometry(1,1,1),
+  floor: new THREE.PlaneGeometry(ROOM_W, ROOM_L),
+  wall:  new THREE.PlaneGeometry(ROOM_L, ROOM_H),
+  ring:  new THREE.TorusGeometry(1.1, 0.09, 10, 36),
+  sphere: new THREE.SphereGeometry(0.5, 10, 8),
+  cyl:   new THREE.CylinderGeometry(0.5, 0.5, 1, 10),
+  cone:  new THREE.CylinderGeometry(0.16, 0.55, 1, 12, 1, true),
+  beam:  (()=>{                      // unit cone: +0.5y at the bulb, -0.5y at the far end
+    const g = new THREE.CylinderGeometry(0.30, 1.15, 1, 16, 6, true);
+    const p = g.attributes.position, col = new Float32Array(p.count*3);
+    for(let i=0;i<p.count;i++){
+      const t = 0.5 - p.getY(i);                 // 0 at the bulb, 1 at the far end
+      const f = Math.pow(1 - t, 2.1) * 0.30;     // steep falloff: the light thins as it drops
+      col[i*3] = f; col[i*3+1] = f*0.84; col[i*3+2] = f*0.56;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(col,3));
+    return g;
+  })(),
+  pool:  (()=>{                      // radial fade: warm at the center, nothing at the rim
+    const g = new THREE.CircleGeometry(1, 28);
+    const p = g.attributes.position, col = new Float32Array(p.count*3);
+    for(let i=0;i<p.count;i++){
+      const r = Math.hypot(p.getX(i), p.getY(i));
+      const f = Math.pow(1 - Math.min(r,1), 2.4) * 0.26;
+      col[i*3] = f; col[i*3+1] = f*0.80; col[i*3+2] = f*0.50;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(col,3));
+    return g;
+  })(),
+  rug:   new THREE.CircleGeometry(1, 24),
+  disc:  new THREE.CircleGeometry(1, 20),
+  confetti: new THREE.PlaneGeometry(0.15, 0.21),
+  page:  new THREE.PlaneGeometry(0.52, 0.68)
+};
+
+function box(mat, sx,sy,sz, x,y,z, ry){
+  const m = new THREE.Mesh(G.unit, mat);
+  m.scale.set(sx,sy,sz); m.position.set(x,y,z);
+  if(ry) m.rotation.y = ry;
+  return m;
+}
+
+// ---------- the paper airplane ----------
+function buildDart(){
+  // classic dart, nose toward -z. Non-indexed for crisp flat facets.
+  const N  = [0, 0, -1.25];
+  const TL = [-1.05, 0.16, 0.95], TR = [1.05, 0.16, 0.95];
+  const TC = [0, 0.02, 0.95];
+  const KB = [0, -0.42, 0.9];
+  const tris = [
+    N, TL, TC,   // left wing
+    N, TC, TR,   // right wing
+    N, TC, KB,   // keel left face
+    N, KB, TC    // keel right face (reversed winding for shading variety)
+  ];
+  const pos = new Float32Array(tris.length*3);
+  tris.forEach((v,i)=>{ pos[i*3]=v[0]; pos[i*3+1]=v[1]; pos[i*3+2]=v[2]; });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const uv = new Float32Array(tris.length*2);
+  tris.forEach((v,i)=>{ uv[i*2]=(v[0]+1.1)/2.2; uv[i*2+1]=(v[2]+1.3)/2.3; });
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv,2));
+  geo.computeVertexNormals();
+  const mesh = new THREE.Mesh(geo, M.plane);
+  const grp = new THREE.Group();
+  grp.add(mesh);
+  return grp;
+}
+const plane = buildDart();
+const planeShadow = new THREE.Mesh(G.disc, new THREE.MeshBasicMaterial({
+  color:0x3a2a16, transparent:true, opacity:0.22, depthWrite:false
+}));
+planeShadow.rotation.x = -Math.PI/2;
+planeShadow.position.set(0, 0.035, 0);
+scene.add(planeShadow);
+plane.position.set(0, 3.4, 0);
+scene.add(plane);
+
+// ---------- furniture kit (templates cloned per room) ----------
+function tTable(){
+  const g = new THREE.Group();
+  g.add(box(M.walnut, 4.6, 0.22, 2.0, 0, 2.42, 0));
+  [[-2.1,-0.85],[2.1,-0.85],[-2.1,0.85],[2.1,0.85]].forEach(p=>
+    g.add(box(M.walnutDark, 0.18, 2.32, 0.18, p[0], 1.16, p[1])));
+  g.userData.colliders = [{x:2.15,y0:0,y1:2.55,z:0.95,label:'a reading table'}];
+  return g;
+}
+function tShelf(){
+  const g = new THREE.Group();
+  g.add(box(M.walnut, 2.3, 5.7, 0.95, 0, 2.85, 0));
+  for(let s=0;s<4;s++){
+    g.add(box(M.trim, 2.1, 0.08, 0.86, 0, 1.0+s*1.35, 0.02));
+    let bx = -0.95;
+    while(bx < 0.85){
+      const bw = rand(0.16,0.3), bh = rand(0.7,1.05);
+      g.add(box(pick(bookMats), bw, bh, 0.6, bx+bw/2, 1.04+s*1.35+bh/2, 0.05));
+      bx += bw + 0.05;
+    }
+  }
+  g.userData.colliders = [{x:1.15,y0:0,y1:5.75,z:0.5,label:'a bookshelf'}];
+  return g;
+}
+function tSofa(){
+  const g = new THREE.Group();
+  g.add(box(M.sage, 3.6, 1.0, 1.5, 0, 0.5, 0));
+  g.add(box(M.sage, 3.6, 1.3, 0.4, 0, 1.6, -0.55));
+  g.add(box(M.sage, 0.4, 1.5, 1.5, -1.8, 0.95, 0));
+  g.add(box(M.sage, 0.4, 1.5, 1.5, 1.8, 0.95, 0));
+  g.add(box(M.cream, 1.5, 0.28, 1.2, -0.8, 1.1, 0.1));
+  g.add(box(M.clay, 1.5, 0.28, 1.2, 0.8, 1.1, 0.1));
+  g.userData.colliders = [{x:1.95,y0:0,y1:2.3,z:0.8,label:'a sofa'}];
+  return g;
+}
+function tChair(){
+  const g = new THREE.Group();
+  g.add(box(M.dusty, 1.7, 0.9, 1.5, 0, 0.55, 0));
+  g.add(box(M.dusty, 1.7, 1.4, 0.4, 0, 1.6, -0.55));
+  g.add(box(M.dusty, 0.35, 1.3, 1.5, -0.85, 0.9, 0));
+  g.add(box(M.dusty, 0.35, 1.3, 1.5, 0.85, 0.9, 0));
+  g.userData.colliders = [{x:0.95,y0:0,y1:2.2,z:0.8,label:'an armchair'}];
+  return g;
+}
+function tLamp(){
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(G.cyl, M.walnutDark); base.scale.set(0.7,0.14,0.7); base.position.y=0.07; g.add(base);
+  const pole = new THREE.Mesh(G.cyl, M.walnutDark); pole.scale.set(0.09,4.2,0.09); pole.position.y=2.1; g.add(pole);
+  const shade = new THREE.Mesh(G.cone, M.shade); shade.scale.set(1.5,1.1,1.5); shade.position.y=4.55; g.add(shade);
+  g.userData.colliders = [{x:0.55,y0:0,y1:5.1,z:0.55,label:'a floor lamp'}];
+  return g;
+}
+function tStack(tall){
+  const g = new THREE.Group();
+  const n = tall ? 11 : 6;
+  let y = 0;
+  for(let i=0;i<n;i++){
+    const h = rand(0.28,0.42), w = rand(1.1,1.5), d = rand(0.8,1.05);
+    const b = box(pick(bookMats), w, h, d, rand(-0.12,0.12), y+h/2, rand(-0.1,0.1), rand(-0.28,0.28));
+    g.add(b); y += h;
+  }
+  g.userData.colliders = [{x:0.8,y0:0,y1:y+0.1,z:0.7,label:'a stack of books'}];
+  return g;
+}
+function tPendant(){
+  const g = new THREE.Group();
+  const shadeTop = 6.35, drop = ROOM_H - shadeTop;
+  // ceiling canopy + cord
+  const canopy = new THREE.Mesh(G.cyl, M.brass);
+  canopy.scale.set(0.34, 0.1, 0.34); canopy.position.y = ROOM_H - 0.05; g.add(canopy);
+  const cord = new THREE.Mesh(G.cyl, M.cord);
+  cord.scale.set(0.045, drop, 0.045); cord.position.y = ROOM_H - drop/2; g.add(cord);
+  // enamel dome: dark brass outside, warm glowing inside
+  const dome = new THREE.Mesh(G.cone, M.domeOut);
+  dome.scale.set(1.55, 0.95, 1.55); dome.position.y = shadeTop - 0.48; g.add(dome);
+  const domeIn = new THREE.Mesh(G.cone, M.domeIn);
+  domeIn.scale.set(1.5, 0.9, 1.5); domeIn.position.y = shadeTop - 0.48;
+  domeIn.material.side = THREE.BackSide; g.add(domeIn);
+  const rim = new THREE.Mesh(G.cyl, M.brass);
+  rim.scale.set(0.86, 0.05, 0.86); rim.position.y = shadeTop - 0.94; g.add(rim);
+  // bulb + the light it throws
+  const bulb = new THREE.Mesh(G.sphere, M.bulb);
+  bulb.scale.set(0.46, 0.52, 0.46); bulb.position.y = shadeTop - 1.02; g.add(bulb);
+  const beam = new THREE.Mesh(G.beam, M.lampBeam);
+  beam.scale.set(1.5, 3.6, 1.5); beam.position.y = shadeTop - 1.05 - 1.8; g.add(beam);
+  const pool = new THREE.Mesh(G.pool, M.lampPool);
+  pool.rotation.x = -Math.PI/2; pool.scale.set(3.0, 3.0, 1); pool.position.y = 0.05; g.add(pool);
+  g.userData.colliders = [{x:0.95,y0:5.1,y1:6.7,z:0.95,label:'a pendant lamp'}];
+  return g;
+}
+function tRug(){
+  const g = new THREE.Group();
+  const r = new THREE.Mesh(G.rug, M.rug);
+  r.rotation.x = -Math.PI/2; r.position.y = 0.02;
+  r.scale.set(rand(2.2,3.2), rand(1.6,2.2), 1);
+  g.add(r);
+  g.userData.colliders = [];
+  return g;
+}
+
+// ---------- room generation ----------
+// A room spans world z [origin - ROOM_L, origin]; origin is its near edge.
+// Rooms scroll toward +z. Colliders are stored room-local (lz in [-ROOM_L,0]).
+const rooms = [];
+const curtains = [];   // animated per frame while near
+
+const PATTERNS = ['study','library','lounge','lanterns','stacks','hall'];
+
+// Nothing tall goes on the window wall inside the light's throw.
+function rightWallSlot(room){
+  const near = -ROOM_L*0.13, far = -ROOM_L*0.87;
+  const clear = z => Math.abs(z - room.winZ) > 6.5;
+  if(clear(near) && clear(far)) return Math.random()<0.5 ? near : far;
+  return clear(near) ? near : far;
+}
+
+function placeFurniture(room, pattern){
+  const L = ROOM_L, add = (tmpl, x, lz, ry)=>{
+    const g = tmpl();
+    g.position.set(x, 0, lz);
+    if(ry) g.rotation.y = ry;
+    room.group.add(g);
+    const swap = ry && Math.abs(Math.abs(ry) - Math.PI/2) < 0.3;
+    g.userData.colliders.forEach(c=>{
+      const ex = swap ? c.z : c.x, ez = swap ? c.x : c.z;
+      room.colliders.push({
+        x0:x-ex, x1:x+ex, y0:c.y0, y1:c.y1,
+        z0:lz-ez, z1:lz+ez, label:c.label
+      });
+    });
+  };
+  switch(pattern){
+    case 'study':
+      add(tTable, rand(-1.6,1.6), -L*0.34);
+      add(tShelf, -6.5+1.15, -L*0.66, Math.PI/2);
+      add(tRug, rand(-1,1), -L*0.5);
+      break;
+    case 'library':
+      add(tShelf, -6.5+1.15, -L*0.3, Math.PI/2);
+      add(tShelf,  6.5-1.15, rightWallSlot(room), -Math.PI/2);
+      add(tStack.bind(null,false), rand(-1.5,1.5), -L*0.8);
+      break;
+    case 'lounge':
+      add(tSofa, -2.6, -L*0.38);
+      add(tLamp, 3.1, -L*0.52);
+      add(tChair, 0.8, -L*0.74, rand(-0.5,0.5));
+      add(tRug, -1.5, -L*0.42);
+      break;
+    case 'lanterns':
+      add(tPendant, -2.6, -L*0.3);
+      add(tPendant,  2.5, -L*0.55);
+      add(tPendant,  rand(-0.6,0.6), -L*0.78);
+      add(tRug, 0, -L*0.5);
+      break;
+    case 'stacks':
+      add(tStack.bind(null,true), -3.1, -L*0.32);
+      add(tStack.bind(null,true), rand(0,1.2), -L*0.52);
+      add(tStack.bind(null,true), 3.1, -L*0.74);
+      add(tStack.bind(null,false), -1.2, -L*0.85);
+      break;
+    case 'hall':
+      add(tRug, 0, -L*0.4);
+      add(tRug, rand(-1,1), -L*0.75);
+      break;
+  }
+}
+
+function clearAt(room, x, y, lz){
+  for(const c of room.colliders){
+    if(lz > c.z0-2.3 && lz < c.z1+2.3 &&
+       x  > c.x0-1.6 && x  < c.x1+1.6 &&
+       y  > c.y0-1.6 && y  < c.y1+1.6) return false;
+  }
+  return true;
+}
+
+let prevRing = { x:0, y:3.6 };  // path continuity across rooms
+function placeRings(room){
+  const zs = [-ROOM_L*0.26, -ROOM_L*0.55, -ROOM_L*0.86];
+  zs.forEach((lz,i)=>{
+    let x=0, y=5.6, ok=false;
+    if(i===2){ // last ring threads the doorway
+      x = room.doorX + rand(-0.4,0.4);
+      y = clamp(room.doorY + rand(-0.6,0.6), BOUND_Y_LO+1.2, BOUND_Y_HI-0.4);
+      ok = true;
+    }else{
+      // stay within a comfortable turn of the previous ring so the
+      // ring line is always flyable at speed
+      const anchor = (i===1)
+        ? { x: lerp(prevRing.x, room.doorX, 0.5), y: lerp(prevRing.y, room.doorY, 0.5) }
+        : prevRing;
+      for(let t=0;t<28 && !ok;t++){
+        x = clamp(anchor.x + rand(-2.6,2.6), -3.6, 3.6);
+        y = clamp(anchor.y + rand(-2.0,2.0), 2.0, 6.6);
+        ok = clearAt(room, x, y, lz);
+      }
+      if(!ok){ x = clamp(anchor.x, -3.6, 3.6); y = 6.4; ok = clearAt(room,x,y,lz); }
+      if(!ok){ x=room.doorX; y=clamp(room.doorY,2.0,6.6); }
+    }
+    prevRing = { x, y };
+    const mat = M.ring.clone();
+    const mesh = new THREE.Mesh(G.ring, mat);
+    mesh.position.set(x, y, lz);
+    mesh.userData.spin = rand(0.4,0.9)*(Math.random()<0.5?-1:1);
+    mesh.userData.ownMat = true;
+    room.group.add(mesh);
+    const disc = new THREE.Mesh(G.disc, new THREE.MeshBasicMaterial({
+      color:0xe0704a, transparent:true, opacity:0.16, depthWrite:false
+    }));
+    disc.rotation.x = -Math.PI/2;
+    disc.scale.set(0.55, 0.55, 1);
+    disc.position.set(x, 0.03, lz);
+    disc.userData.ownMat = true;
+    room.group.add(disc);
+    room.rings.push({ x, y, lz, mesh, disc, collected:false, judged:false, flash:0 });
+  });
+}
+
+function buildPartition(room){
+  const lz = -ROOM_L, t = 0.5;
+  const doorW = 5.2, doorH = 5.8, doorB = 0.7;
+  const cx = pick([-2.6, 0, 2.6]);
+  room.doorX = cx;
+  room.doorY = doorB + doorH*0.55;
+  const wallMat = room.wallMat;
+  const seg = (x0,x1,y0,y1,label)=>{
+    const w=x1-x0, h=y1-y0;
+    if(w<=0.01||h<=0.01) return;
+    room.group.add(box(wallMat, w, h, t, (x0+x1)/2, (y0+y1)/2, lz));
+    room.colliders.push({x0, x1, y0, y1, z0:lz-t/2, z1:lz+t/2, label});
+  };
+  seg(-ROOM_W/2, cx-doorW/2, 0, ROOM_H, 'the wall');
+  seg(cx+doorW/2, ROOM_W/2, 0, ROOM_H, 'the wall');
+  seg(cx-doorW/2, cx+doorW/2, doorB+doorH, ROOM_H, 'the doorway');
+  seg(cx-doorW/2, cx+doorW/2, 0, doorB, 'the doorway');
+  // trim frame
+  room.group.add(box(M.trim, doorW+0.5, 0.3, t+0.2, cx, doorB+doorH+0.1, lz));
+  room.group.add(box(M.trim, 0.3, doorH+0.4, t+0.2, cx-doorW/2-0.1, doorB+doorH/2, lz));
+  room.group.add(box(M.trim, 0.3, doorH+0.4, t+0.2, cx+doorW/2+0.1, doorB+doorH/2, lz));
+}
+
+function buildShell(room){
+  const g = room.group;
+  const floor = new THREE.Mesh(G.floor, M.floor);
+  floor.rotation.x = -Math.PI/2; floor.position.set(0,0,-ROOM_L/2); g.add(floor);
+  const ceil = new THREE.Mesh(G.floor, M.ceiling);
+  ceil.rotation.x = Math.PI/2; ceil.position.set(0,ROOM_H,-ROOM_L/2); g.add(ceil);
+  const wl = new THREE.Mesh(G.wall, room.wallShadeMat);
+  wl.rotation.y = Math.PI/2; wl.position.set(-ROOM_W/2, ROOM_H/2, -ROOM_L/2); g.add(wl);
+  const wr = new THREE.Mesh(G.wall, room.wallMat);
+  wr.rotation.y = -Math.PI/2; wr.position.set(ROOM_W/2, ROOM_H/2, -ROOM_L/2); g.add(wr);
+  // baseboards
+  g.add(box(M.trim, 0.16, 0.4, ROOM_L, -ROOM_W/2+0.08, 0.2, -ROOM_L/2));
+  g.add(box(M.trim, 0.16, 0.4, ROOM_L,  ROOM_W/2-0.08, 0.2, -ROOM_L/2));
+  // picture frames on left wall
+  if(Math.random()<0.8){
+    const fy = rand(4,6), fz = -rand(6,ROOM_L-6);
+    g.add(box(M.walnutDark, 0.12, 1.7, 1.3, -ROOM_W/2+0.1, fy, fz));
+    g.add(box(M.frameArt, 0.06, 1.4, 1.0, -ROOM_W/2+0.17, fy, fz));
+  }
+}
+
+function buildWindow(room){
+  const g = room.group;
+  const wz = room.winZ;
+  const wy = 4.6, wh = 3.6, ww = 3.4;
+  // frame + warm glass on the sunny (right) wall
+  g.add(box(M.trim, 0.22, wh+0.4, ww+0.4, ROOM_W/2-0.1, wy, wz));
+  const glass = new THREE.Mesh(G.unit, M.glass);
+  glass.scale.set(0.1, wh, ww); glass.position.set(ROOM_W/2-0.22, wy, wz);
+  g.add(glass);
+  g.add(box(M.trim, 0.26, 0.14, ww, ROOM_W/2-0.2, wy, wz));            // muntin h
+  g.add(box(M.trim, 0.26, wh, 0.14, ROOM_W/2-0.2, wy, wz));            // muntin v
+  // light shafts: one beam + floor pool per window pane, following the
+  // real sun direction so glow, panes, and floor light all agree
+  const gx = ROOM_W/2 - 0.28;
+  const DX = -0.82, DZ = -0.45;              // sun travel per unit of fall
+  const proj = (y, z) => [gx + DX*y, 0.025, z + DZ*y];
+  const panesY = [[wy+0.12, wy+wh/2-0.16], [wy-wh/2+0.16, wy-0.12]];
+  const panesZ = [[wz-ww/2+0.16, wz-0.12], [wz+0.12, wz+ww/2-0.16]];
+  const pos = [], col = [];
+  const push = (p, c) => { pos.push(...p); col.push(...c); };
+  const beamTop = [0.42,0.37,0.24], beamBot = [0.02,0.02,0.01];
+  const poolNear = [0.30,0.26,0.15], poolFar = [0.15,0.12,0.07];
+  for(const [yBot, yTop] of panesY){
+    for(const [z0, z1] of panesZ){
+      const A = [gx, yTop, z0], B = [gx, yTop, z1];
+      const pC = proj(yBot, z1), pD = proj(yBot, z0);
+      // beam sheet: pane top edge down to the floor landing of its bottom edge
+      push(A, beamTop); push(B, beamTop); push(pC, beamBot);
+      push(A, beamTop); push(pC, beamBot); push(pD, beamBot);
+      // floor pool: between landings of the pane's top and bottom edges
+      const pA = proj(yTop, z0), pB = proj(yTop, z1);
+      push(pD, poolNear); push(pC, poolNear); push(pB, poolFar);
+      push(pD, poolNear); push(pB, poolFar); push(pA, poolFar);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos),3));
+  geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(col),3));
+  const shaft = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+    vertexColors:true, transparent:true, opacity:0.55,
+    blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide
+  }));
+  g.add(shaft);
+  // curtain beside the window, gently swaying
+  const cw = 2.2, ch = 5.4;
+  const cgeo = new THREE.PlaneGeometry(cw, ch, 6, 9);
+  const curtain = new THREE.Mesh(cgeo, new THREE.MeshLambertMaterial({
+    color:'#e8c9a2', map:paperTex, side:THREE.DoubleSide
+  }));
+  curtain.rotation.y = -Math.PI/2;
+  curtain.position.set(ROOM_W/2-0.45, wy+0.4, wz - ww/2 - cw/2 - 0.2);
+  g.add(curtain);
+  const base = cgeo.attributes.position.array.slice();
+  curtains.push({ mesh:curtain, base, seed:rand(0,6.28), room });
+}
+
+function buildRoom(origin){
+  const group = new THREE.Group();
+  group.position.z = origin;
+  const room = {
+    group, origin,
+    wallMat: null, wallShadeMat: null,
+    colliders: [], rings: [],
+    doorX: 0, doorY: 3.9
+  };
+  const wi = Math.floor(Math.random()*M.walls.length);
+  room.wallMat = M.walls[wi];
+  room.wallShadeMat = M.wallsShade[wi];
+  room.winZ = -ROOM_L*rand(0.4,0.6);      // decided before furniture, so nothing blocks it
+  let pattern;
+  const firstRoom = rooms.length === 0;
+  if(firstRoom) pattern = 'hall';
+  else {
+    do { pattern = pick(PATTERNS); } while(pattern === lastPattern || (pattern==='hall' && Math.random()<0.5));
+  }
+  lastPattern = pattern;
+  room.pattern = pattern;
+  buildShell(room);
+  placeFurniture(room, pattern);
+  buildPartition(room);
+  if(!(firstRoom && state === 'playing')) placeRings(room);
+  buildWindow(room);
+  scene.add(group);
+  rooms.push(room);
+  return room;
+}
+
+function removeRoom(room){
+  scene.remove(room.group);
+  for(let i=curtains.length-1;i>=0;i--) if(curtains[i].room===room) curtains.splice(i,1);
+  // shared geometries/materials stay alive; only the one-off buffers go
+  room.group.traverse(o=>{
+    if(o.geometry && o.geometry !== G.unit && !Object.values(G).includes(o.geometry)) o.geometry.dispose();
+    if(o.userData.ownMat && o.material) o.material.dispose();
+  });
+}
+
+function farEdge(){
+  let f = 20;
+  for(const r of rooms) f = Math.min(f, r.origin - ROOM_L);
+  return f;
+}
+function ensureRooms(){
+  if(rooms.length === 0) buildRoom(10);
+  while(farEdge() > SPAWN_DEPTH) buildRoom(farEdge());
+  for(let i=rooms.length-1;i>=0;i--){
+    if(rooms[i].origin - ROOM_L > camera.position.z + 2){
+      removeRoom(rooms[i]); rooms.splice(i,1);
+    }
+  }
+}
+
+// ---------- atmosphere: dust + loose pages + confetti ----------
+const DUST_N = 200;
+const dustPos = new Float32Array(DUST_N*3);
+for(let i=0;i<DUST_N;i++){
+  dustPos[i*3]   = rand(-6.4,6.4);
+  dustPos[i*3+1] = rand(0.4,8.6);
+  dustPos[i*3+2] = rand(-60,8);
+}
+const dustGeo = new THREE.BufferGeometry();
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos,3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+  color:0xffe9c0, size:0.075, transparent:true, opacity:0.6, sizeAttenuation:true
+}));
+scene.add(dust);
+
+const PAGE_N = 10;
+const pages = new THREE.InstancedMesh(G.page, new THREE.MeshLambertMaterial({
+  color:'#f7efe0', map:paperTex, side:THREE.DoubleSide
+}), PAGE_N);
+const pageState = [];
+for(let i=0;i<PAGE_N;i++){
+  pageState.push({ x:rand(-5,5), y:rand(1.5,7.5), z:rand(-70,0),
+    ph:rand(0,6.28), rs:rand(1,3), mul:rand(1.12,1.4) });
+}
+scene.add(pages);
+
+const CONF_N = 70;
+const confetti = new THREE.InstancedMesh(G.confetti, new THREE.MeshBasicMaterial({side:THREE.DoubleSide}), CONF_N);
+const confState = [];
+for(let i=0;i<CONF_N;i++) confState.push({ life:0, x:0,y:0,z:0, vx:0,vy:0,vz:0, r:rand(0,6), rs:rand(-7,7) });
+const confColors = [new THREE.Color('#e0704a'), new THREE.Color('#f6ecd9'), new THREE.Color('#c9a35a'), new THREE.Color('#93a184')];
+scene.add(confetti);
+const dummy = new THREE.Object3D();
+function burst(x,y,z,white,count){
+  let fired = 0;
+  for(let i=0;i<CONF_N && fired<count;i++){
+    const c = confState[i];
+    if(c.life>0) continue;
+    c.life = rand(0.7,1.1);
+    c.x=x; c.y=y; c.z=z;
+    c.vx=rand(-3.4,3.4); c.vy=rand(0.5,4.5); c.vz=rand(-1,4);
+    confetti.setColorAt(i, white ? confColors[1] : pick(confColors));
+    fired++;
+  }
+  if(confetti.instanceColor) confetti.instanceColor.needsUpdate = true;
+}
+
+// ---------- input ----------
+const target = { x:0, y:3.4 };
+const isCoarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+if(isCoarse) el.controlHint.innerHTML = '<b>Drag</b> anywhere to steer';
+let dragging = false, lastPX = 0, lastPY = 0, activeId = null;
+
+function pointerAbs(e){
+  target.x = clamp(((e.clientX/window.innerWidth)*2-1)*BOUND_X*1.12, -BOUND_X, BOUND_X);
+  target.y = clamp(BOUND_Y_LO + (1 - e.clientY/window.innerHeight)*(BOUND_Y_HI-BOUND_Y_LO)*1.12, BOUND_Y_LO, BOUND_Y_HI);
+}
+function onUI(e){
+  const t = e.target;
+  return !!(t && t.closest && t.closest('button, a, .modal, .card, summary'));
+}
+window.addEventListener('pointerdown', e=>{
+  ensureAudio();
+  if(onUI(e) || paused) return;
+  if(e.pointerType === 'touch' || e.pointerType === 'pen'){
+    dragging = true; lastPX = e.clientX; lastPY = e.clientY;
+    if(e.isPrimary) activeId = e.pointerId;
+  }
+}, {passive:true});
+window.addEventListener('pointermove', e=>{
+  if(e.pointerType === 'mouse'){
+    if(!paused && (state === 'playing' || state === 'menu')) pointerAbs(e);
+  }else if(dragging && e.pointerId === activeId){
+    const dx = e.clientX - lastPX, dy = e.clientY - lastPY;
+    lastPX = e.clientX; lastPY = e.clientY;
+    // a full-screen swipe traverses roughly the full flight box, no more
+    target.x = clamp(target.x + dx/window.innerWidth * 10.4, -BOUND_X, BOUND_X);
+    target.y = clamp(target.y - dy/window.innerHeight * 8.4, BOUND_Y_LO, BOUND_Y_HI);
+  }
+}, {passive:true});
+window.addEventListener('pointerup', e=>{
+  if(e.pointerId === activeId){ dragging = false; activeId = null; }
+}, {passive:true});
+window.addEventListener('pointercancel', ()=>{ dragging = false; activeId = null; }, {passive:true});
+
+const keys = {};
+window.addEventListener('keydown', e=>{
+  if(e.repeat) return;
+  ensureAudio();
+  keys[e.code] = true;
+  if(e.code === 'Space' || e.code === 'Enter'){
+    if(state === 'menu') startRun();
+    else if(state === 'over') startRun();
+    if(e.code === 'Space') e.preventDefault();
+  }
+});
+window.addEventListener('keyup', e=>{ keys[e.code] = false; });
+function keySteer(dt){
+  const v = 9*dt;
+  if(keys.ArrowLeft || keys.KeyA)  target.x = clamp(target.x - v, -BOUND_X, BOUND_X);
+  if(keys.ArrowRight || keys.KeyD) target.x = clamp(target.x + v, -BOUND_X, BOUND_X);
+  if(keys.ArrowUp || keys.KeyW)    target.y = clamp(target.y + v, BOUND_Y_LO, BOUND_Y_HI);
+  if(keys.ArrowDown || keys.KeyS)  target.y = clamp(target.y - v, BOUND_Y_LO, BOUND_Y_HI);
+}
+
+// ---------- audio (tiny synth, created on first gesture) ----------
+let AC = null, muted = store.get('paperglider_muted') === '1';
+function applyMuteUI(){
+  el.muteBtn.classList.toggle('muted', muted);
+  el.muteBtn.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound');
+  el.muteBtn.title = muted ? 'Unmute sound' : 'Mute sound';
+}
+applyMuteUI();
+function ensureAudio(){
+  if(AC || typeof (window.AudioContext||window.webkitAudioContext) === 'undefined') { if(AC && AC.state==='suspended') AC.resume(); return; }
+  try{
+    AC = new (window.AudioContext||window.webkitAudioContext)();
+  }catch(e){ AC = null; }
+}
+function chime(stk){
+  if(!AC || muted) return;
+  const f = [523, 587, 659, 784, 880][clamp(stk-1,0,4)];
+  [0, 0.07].forEach((t,i)=>{
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine'; o.frequency.value = f * (i ? 1.5 : 1);
+    g.gain.setValueAtTime(0.0001, AC.currentTime+t);
+    g.gain.exponentialRampToValueAtTime(0.12, AC.currentTime+t+0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+t+0.35);
+    o.connect(g); g.connect(AC.destination);
+    o.start(AC.currentTime+t); o.stop(AC.currentTime+t+0.4);
+  });
+}
+function fwump(){
+  if(!AC || muted) return;
+  const len = AC.sampleRate*0.3, buf = AC.createBuffer(1,len,AC.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i] = (Math.random()*2-1)*(1-i/len);
+  const s = AC.createBufferSource(); s.buffer = buf;
+  const f = AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=520;
+  const g = AC.createGain(); g.gain.value = 0.35;
+  s.connect(f); f.connect(g); g.connect(AC.destination);
+  s.start();
+}
+el.muteBtn.addEventListener('click', e=>{
+  e.stopPropagation();
+  muted = !muted;
+  store.set('paperglider_muted', muted ? '1' : '0');
+  applyMuteUI();
+});
+
+// ---------- HUD helpers ----------
+function setScore(v){ el.score.textContent = v; }
+function setStreak(v){
+  el.streak.textContent = '\u00d7' + v;
+  el.streak.classList.toggle('on', v >= 2);
+}
+function floater(txt){
+  const f = document.createElement('div');
+  f.className = 'floater';
+  f.textContent = txt;
+  const p = plane.position.clone().project(camera);
+  f.style.left = ((p.x*0.5+0.5)*100) + '%';
+  f.style.top  = ((-p.y*0.5+0.5)*100 - 6) + '%';
+  el.floaters.appendChild(f);
+  setTimeout(()=>f.remove(), 1050);
+}
+
+// ---------- game flow ----------
+function resetWorld(){
+  while(rooms.length) { removeRoom(rooms[0]); rooms.shift(); }
+  lastPattern = '';
+  prevRing = { x:0, y:3.4 };
+  ensureRooms();
+}
+function startRun(){
+  score = 0; streak = 1; playT = 0;
+  speed = SPEED_BASE * 0.6;
+  graceUntil = GRACE_TIME;
+  crashLabel = '';
+  target.x = 0; target.y = 3.4;
+  plane.position.set(0, 3.4, 0);
+  plane.rotation.set(0,0,0);
+  plane.scale.set(1,1,1);
+  plane.visible = true;
+  state = 'playing';
+  resetWorld();
+  setScore(0); setStreak(1);
+  el.start.classList.remove('on');
+  el.over.classList.remove('on');
+  el.hud.classList.add('on');
+}
+function endRun(label){
+  state = 'crashed';
+  crashLabel = label;
+  fwump();
+  burst(plane.position.x, plane.position.y, 0, true, 26);
+  shake = 0.5;
+  setTimeout(showOver, 520);
+}
+function showOver(){
+  if(state !== 'crashed') return;
+  state = 'over';
+  overShownAt = performance.now();
+  plane.visible = false;
+  const isNew = score > best;
+  if(isNew){ best = score; store.set('paperglider_best', String(best)); }
+  el.crashLine.textContent =
+    crashLabel === 'the wall' ? 'You met a wall.' :
+    crashLabel === 'the doorway' ? 'Clipped the doorway.' :
+    'You met ' + crashLabel + '.';
+  el.overScore.textContent = score;
+  el.overBest.textContent = 'best ' + best;
+  el.newBest.classList.toggle('show', isNew);
+  el.hud.classList.remove('on');
+  el.over.classList.add('on');
+}
+el.flyBtn.addEventListener('click', startRun);
+el.start.addEventListener('pointerdown', e=>{ if(e.target === el.start) startRun(); });
+el.againBtn.addEventListener('click', startRun);
+el.over.addEventListener('pointerdown', e=>{
+  if(performance.now() - overShownAt > 450 && e.target === el.over) startRun();
+});
+
+// ---------- modals ----------
+let paused = false;
+window.toggleHelp = s=>{
+  $('helpModal').classList.toggle('hidden', !s);
+  paused = !!s && state === 'playing';
+  if(!s && state === 'playing') graceUntil = Math.max(graceUntil, playT + 0.8);
+};
+window.toggleFaq  = s=>$('faqModal').classList.toggle('hidden', !s);
+el.helpBtn.addEventListener('click', e=>{ e.stopPropagation(); toggleHelp(true); });
+
+// ---------- god mode (无敌模式) ----------
+const godBtn = $('godBtn');
+function updateGodBtn(){
+  if(godMode){
+    godBtn.classList.add('god-on');
+    godBtn.title = '无敌模式：开（点击关闭）';
+  }else{
+    godBtn.classList.remove('god-on');
+    godBtn.title = '无敌模式：关（点击开启，不怕撞）';
+  }
+}
+updateGodBtn();
+godBtn.addEventListener('click', e=>{
+  e.stopPropagation();
+  godMode = !godMode;
+  store.set('paperglider_god', godMode ? '1' : '0');
+  updateGodBtn();
+});
+$('helpModal').addEventListener('pointerdown', e=>{ if(e.target === $('helpModal')) toggleHelp(false); });
+$('faqModal').addEventListener('pointerdown',  e=>{ if(e.target === $('faqModal'))  toggleFaq(false); });
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Escape') return;
+  const faqOpen  = !$('faqModal').classList.contains('hidden');
+  const helpOpen = !$('helpModal').classList.contains('hidden');
+  if(faqOpen){ toggleFaq(false); e.stopImmediatePropagation(); }
+  else if(helpOpen){ toggleHelp(false); }
+});
+
+// ---------- collisions & rings ----------
+function checkCollisions(){
+  if(godMode) return null;
+  if(playT < graceUntil) return null;
+  const px = plane.position.x, py = plane.position.y;
+  for(const room of rooms){
+    for(const c of room.colliders){
+      const z0 = room.origin + c.z0, z1 = room.origin + c.z1;
+      if(z1 < -PLANE_R || z0 > PLANE_R) continue;
+      const cx = clamp(px, c.x0 + 0.12, c.x1 - 0.12);
+      const cy = clamp(py, c.y0 + 0.12, c.y1 - 0.12);
+      const cz = clamp(0, z0, z1);
+      const dx = px-cx, dy = py-cy, dz = 0-cz;
+      if(dx*dx + dy*dy + dz*dz < PLANE_R*PLANE_R) return c.label;
+    }
+  }
+  return null;
+}
+function checkRings(prevOrigins){
+  rooms.forEach((room,ri)=>{
+    const dz = room.origin - prevOrigins[ri];
+    room.rings.forEach(r=>{
+      if(r.judged) return;
+      const wzNow = room.origin + r.lz;
+      const wzPrev = wzNow - dz;
+      if(wzPrev <= 0 && wzNow > 0){
+        r.judged = true;
+        const dx = plane.position.x - r.x, dy = plane.position.y - r.mesh.position.y;
+        if(state === 'playing' && Math.sqrt(dx*dx+dy*dy) < RING_R){
+          r.collected = true;
+          const pts = 10 * streak;
+          score += pts;
+          setScore(score);
+          floater('+' + pts);
+          chime(streak);
+          streak = Math.min(streak + 1, 5);
+          setStreak(streak);
+          r.flash = 1;                     // bloom-and-fade, not a shatter
+          r.mesh.material.transparent = true;
+          speed = Math.min(speed + 0.25, SPEED_MAX);
+        }else if(state === 'playing'){
+          streak = 1; setStreak(1);
+        }
+      }
+    });
+  });
+}
+
+// ---------- main loop ----------
+let last = performance.now(), shake = 0;
+let frameAvg = 16, frameCount = 0;
+
+function update(dt){
+  const menu = state === 'menu';
+  const flying = state === 'playing';
+
+  // difficulty & speed
+  if(flying){
+    playT += dt;
+    const targetSpeed = Math.min(SPEED_BASE + playT*0.30, SPEED_MAX);
+    if(speed < targetSpeed) speed = lerp(speed, targetSpeed, 1 - Math.exp(-dt*1.4));
+  }else if(menu){
+    speed = lerp(speed, SPEED_MENU, 1 - Math.exp(-dt*2));
+  }else{
+    speed = lerp(speed, 0, 1 - Math.exp(-dt*4));
+  }
+
+  // scroll world
+  const prevOrigins = rooms.map(r=>r.origin);
+  for(const room of rooms) {
+    room.origin += speed*dt;
+    room.group.position.z = room.origin;
+  }
+  ensureRooms();
+
+  // steer plane
+  if(flying){
+    keySteer(dt);
+    const k = 1 - Math.exp(-dt*6.2);
+    const ox = plane.position.x, oy = plane.position.y;
+    plane.position.x = lerp(plane.position.x, target.x, k);
+    plane.position.y = lerp(plane.position.y, target.y, k);
+    const vx = (plane.position.x-ox)/Math.max(dt,0.001);
+    const vy = (plane.position.y-oy)/Math.max(dt,0.001);
+    plane.rotation.z = lerp(plane.rotation.z, clamp(-vx*0.10, -0.85, 0.85), 1-Math.exp(-dt*8));
+    plane.rotation.x = lerp(plane.rotation.x, clamp(-vy*0.055, -0.5, 0.5), 1-Math.exp(-dt*8));
+    plane.rotation.y = lerp(plane.rotation.y, clamp(-vx*0.03, -0.3, 0.3), 1-Math.exp(-dt*8));
+  }else if(menu){
+    const t = performance.now()/1000;
+    plane.position.x = lerp(plane.position.x, Math.sin(t*0.7)*0.8, 1-Math.exp(-dt*3));
+    plane.position.y = lerp(plane.position.y, 3.4 + Math.sin(t*1.3)*0.35, 1-Math.exp(-dt*3));
+    plane.rotation.z = Math.sin(t*0.9)*0.16;
+    plane.rotation.x = Math.sin(t*1.1)*0.07;
+  }else if(state === 'crashed'){
+    plane.rotation.z += dt*14;
+    plane.rotation.x += dt*9;
+    plane.scale.multiplyScalar(Math.max(0, 1 - dt*2.2));
+    plane.position.z += speed*dt*0.4;
+  }
+
+  // rings & collisions
+  checkRings(prevOrigins);
+  if(flying){
+    const hit = checkCollisions();
+    if(hit) endRun(hit);
+  }
+
+  // plane ground shadow (depth anchor)
+  planeShadow.visible = plane.visible;
+  planeShadow.position.x = plane.position.x;
+  const shScale = clamp(0.9 - plane.position.y*0.055, 0.35, 0.85);
+  planeShadow.scale.set(shScale, shScale, 1);
+  planeShadow.material.opacity = clamp(0.3 - plane.position.y*0.025, 0.08, 0.26);
+
+  // ring spin + bob + aligned glow
+  for(const room of rooms){
+    for(const r of room.rings){
+      if(!r.mesh.visible) continue;
+      if(r.collected){
+        r.flash = Math.max(0, r.flash - dt*3.4);
+        const grow = 1 + (1 - r.flash)*1.5;
+        r.mesh.scale.set(grow, grow, grow);
+        r.mesh.material.opacity = r.flash;
+        r.mesh.material.emissiveIntensity = 0.42 + r.flash*1.2;
+        r.mesh.rotation.z += dt*2.2;
+        if(r.disc) r.disc.material.opacity = 0.16*r.flash;
+        if(r.flash <= 0){ r.mesh.visible = false; if(r.disc) r.disc.visible = false; }
+        continue;
+      }
+      r.mesh.rotation.z += r.mesh.userData.spin*dt;
+      r.mesh.position.y = r.y + Math.sin(performance.now()/700 + r.x)*0.12;
+      const wz = room.origin + r.lz;
+      const dx = plane.position.x - r.x, dy = plane.position.y - r.mesh.position.y;
+      const aligned = flying && !r.judged && wz < 0 && wz > -34 &&
+                      Math.sqrt(dx*dx + dy*dy) < RING_R*0.9;
+      const target = aligned ? 1.0 : 0.42;
+      const cur = r.mesh.material.emissiveIntensity;
+      r.mesh.material.emissiveIntensity = lerp(cur, target, 1-Math.exp(-dt*10));
+      const sc = aligned ? 1.14 : 1.0;
+      const cs = lerp(r.mesh.scale.x, sc, 1-Math.exp(-dt*10));
+      r.mesh.scale.set(cs, cs, cs);
+      if(r.disc) r.disc.material.opacity = aligned ? 0.4 : 0.16;
+    }
+  }
+
+  // curtains sway
+  const tNow = performance.now()/1000;
+  for(const c of curtains){
+    if(c.room.origin < -40) continue;
+    const attr = c.mesh.geometry.attributes.position;
+    const arr = attr.array, base = c.base;
+    for(let i=0;i<arr.length;i+=3){
+      const by = base[i+1];
+      const hang = (2.7 - by)/5.4 + 0.5;      // 0 top, 1 bottom
+      arr[i+2] = base[i+2] + Math.sin(tNow*1.5 + c.seed + by*1.2)*0.30*hang;
+    }
+    attr.needsUpdate = true;
+    c.mesh.geometry.computeVertexNormals();
+  }
+
+  // dust drift
+  const dp = dustGeo.attributes.position.array;
+  for(let i=0;i<DUST_N;i++){
+    dp[i*3+2] += speed*dt*0.35;
+    dp[i*3+1] += Math.sin(tNow*0.6 + i)*0.0015;
+    if(dp[i*3+2] > 9){ dp[i*3+2] = -60; dp[i*3] = rand(-6.4,6.4); dp[i*3+1] = rand(0.4,8.6); }
+  }
+  dustGeo.attributes.position.needsUpdate = true;
+
+  // loose pages tumbling past
+  for(let i=0;i<PAGE_N;i++){
+    const p = pageState[i];
+    p.z += speed*dt*p.mul;
+    if(p.z > 9){ p.z = rand(-80,-55); p.x = rand(-5,5); p.y = rand(1.5,7.5); }
+    dummy.position.set(p.x + Math.sin(tNow*1.3+p.ph)*0.7, p.y + Math.sin(tNow*2.1+p.ph)*0.5, p.z);
+    dummy.rotation.set(tNow*p.rs+p.ph, tNow*p.rs*0.7, Math.sin(tNow+p.ph));
+    dummy.scale.set(1,1,1);
+    dummy.updateMatrix();
+    pages.setMatrixAt(i, dummy.matrix);
+  }
+  pages.instanceMatrix.needsUpdate = true;
+
+  // confetti
+  let anyConf = false;
+  for(let i=0;i<CONF_N;i++){
+    const c = confState[i];
+    if(c.life <= 0){
+      dummy.position.set(0,-50,0); dummy.scale.set(0.001,0.001,0.001);
+    }else{
+      anyConf = true;
+      c.life -= dt;
+      c.vy -= 6.5*dt;
+      c.x += c.vx*dt; c.y += c.vy*dt; c.z += (c.vz + speed*0.6)*dt;
+      c.r += c.rs*dt;
+      dummy.position.set(c.x, c.y, c.z);
+      dummy.rotation.set(c.r, c.r*0.8, c.r*0.5);
+      dummy.scale.set(1,1,1);
+    }
+    dummy.updateMatrix();
+    confetti.setMatrixAt(i, dummy.matrix);
+  }
+  confetti.instanceMatrix.needsUpdate = true;
+
+  // camera follow + speed FOV + shake
+  camera.position.x = lerp(camera.position.x, plane.position.x*0.38, 1-Math.exp(-dt*4));
+  camera.position.y = lerp(camera.position.y, 3.3 + plane.position.y*0.16, 1-Math.exp(-dt*4));
+  if(shake > 0){
+    shake = Math.max(0, shake - dt*1.6);
+    camera.position.x += rand(-1,1)*shake*0.25;
+    camera.position.y += rand(-1,1)*shake*0.25;
+  }
+  camera.lookAt(plane.position.x*0.55, 2.4 + plane.position.y*0.4, -9);
+  const fovT = 62 + (speed - SPEED_BASE)/(SPEED_MAX-SPEED_BASE)*8;
+  const newFov = clamp(lerp(camera.fov, flying ? fovT : 62, 1-Math.exp(-dt*2)), 60, 72);
+  if(Math.abs(newFov - camera.fov) > 0.05){ camera.fov = newFov; camera.updateProjectionMatrix(); }
+
+}
+
+function tick(now){
+  requestAnimationFrame(tick);
+  let dt = (now - last)/1000;
+  last = now;
+  if(dt > 0.05){ dt = 0.05; graceUntil = Math.max(graceUntil, playT + 0.6); }
+  if(!paused) update(dt);
+  renderer.render(scene, camera);
+
+  // adaptive resolution: keep weak devices smooth
+  frameAvg = frameAvg*0.96 + (dt*1000)*0.04;
+  if(++frameCount % 150 === 0){
+    if(frameAvg > 26 && dprNow > 1){ dprNow = Math.max(1, dprNow - 0.25); renderer.setPixelRatio(dprNow); }
+    else if(frameAvg < 14 && dprNow < dprCap){ dprNow = Math.min(dprCap, dprNow + 0.25); renderer.setPixelRatio(dprNow); }
+  }
+}
+
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden){ last = performance.now(); graceUntil = Math.max(graceUntil, playT + 0.8); }
+});
+
+// ---------- boot ----------
+if(best > 0){
+  el.bestTabStart.textContent = 'Best ' + best;
+  el.bestTabStart.classList.add('show');
+}
+ensureRooms();
+requestAnimationFrame(t=>{ last = t; requestAnimationFrame(tick); });
+
+// internal hook for automated smoke tests
+window.__pg = {
+  get state(){ return state; },
+  get score(){ return score; },
+  get best(){ return best; },
+  get speed(){ return speed; },
+  rooms, plane, target, camera,
+  start:startRun, update, checkCollisions,
+  setGrace(v){ graceUntil = v; }
+};
+})();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"8828d9fe968a429d8a25006804c74975","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
