@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Papery Planes</title>
+    <style>
+        /* ===== å…¨å±€é‡ç½® ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===== é¡µé¢åŸºç¡€ =====
+           å…¨å±ã€æ·±è‰²èƒŒæ™¯ã€ç¦æ­¢æ»šåŠ¨ï¼Œè®©æ¸¸æˆç”»å¸ƒå æ»¡æ•´ä¸ªè§†å?*/
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #231F20; /* Unity æ¸¸æˆçš„é»˜è®¤èƒŒæ™¯è‰²ï¼Œé¿å…ç™½è¾?*/
+        }
+
+        /* ===== æ¸¸æˆå®¹å™¨ =====
+           å æ»¡å…¨å±ï¼Œå†…éƒ?canvas ä¹Ÿå¼ºåˆ?100% å¡«æ»¡ */
+        #gameContainer { width: 100%; height: 100%; position: relative; }
+        #gameContainer canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            /* ç§»åŠ¨ç«¯ï¼šé˜²æ­¢ canvas å›?DPR å¤ªé«˜è¶…å‡ºæ˜¾å­˜å¯¼è‡´é»‘å± */
+            image-rendering: auto;
+        }
+
+        /* ===== åŠ è½½é®ç½© =====
+           å±…ä¸­æ˜¾ç¤ºæ¸¸æˆæ ‡é¢˜å’Œè¿›åº¦æ¡ï¼ŒUnity åŠ è½½å®ŒæˆåŽæ·¡å‡ºæ¶ˆå¤?*/
+        #loading {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #231F20;
+            color: #fff;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading h1 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #ffb060; /* æ¸¸æˆä¸»é¢˜æ©™è‰² */
+            font-weight: 500;
+        }
+
+        /* è¿›åº¦æ¡å¤–å±‚è½¨é?*/
+        .progress-wrap {
+            width: 240px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        /* è¿›åº¦æ¡å†…å±‚å¡«å…?*/
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #ffb060;
+            transition: width 0.3s ease;
+        }
+
+        #loading p {
+            font-size: 12px;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        /* ===== è¿”å›žä¸»é¡µæŒ‰é’® =====
+           å·¦ä¸Šè§’æ‚¬æµ®ï¼Œé»˜è®¤åŠé€æ˜Žï¼Œhover æ—¶å®Œå…¨æ˜¾ç¤?*/
+        #backBtn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 20;
+            width: 36px;
+            height: 36px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            opacity: 0.4;
+            transition: opacity 0.2s ease;
+        }
+        #backBtn:hover { opacity: 1; }
+        #backBtn svg {
+            width: 20px;
+            height: 20px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    </style>
+</head>
+<body>
+    <!-- è¿”å›žä¸»é¡µæŒ‰é’® -->
+    <a href="../../index.html" id="backBtn" title="è¿”å›žä¸»é¡µ">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+
+    <!-- åŠ è½½é®ç½©ï¼ˆUnity åŠ è½½å®ŒæˆåŽè‡ªåŠ¨éšè—ï¼‰ -->
+    <div id="loading">
+        <h1>Papery Planes</h1>
+        <div class="progress-wrap">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p id="loadingText">Loading...</p>
+    </div>
+
+    <!-- Unity æ¸¸æˆç”»å¸ƒå®¹å™¨ -->
+    <div id="gameContainer"></div>
+
+    <!-- Unity åŠ è½½å™¨ï¼ˆUnity å®˜æ–¹æä¾›ï¼?019.1 ç‰ˆæœ¬ï¼?-->
+    <script src="UnityLoader.2019.1.js"></script>
+
+    <script>
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•?     *  Poki SDK æ¨¡æ‹Ÿ
+     * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•?     *
+     * ã€ä¸ºä»€ä¹ˆéœ€è¦ã€?     *  è¿™ä¸ªæ¸¸æˆåŽŸæœ¬å‘å¸ƒåœ?Poki å¹³å°ï¼Œæ¸¸æˆä»£ç å†…éƒ¨ä¼šè°ƒç”¨ PokiSDK
+     *  æ’­æ”¾å¹¿å‘Šã€ä¸ŠæŠ¥æ¸¸æˆäº‹ä»¶ç­‰ã€‚å¦‚æžœä¸æä¾›æ¨¡æ‹Ÿå®žçŽ°ï¼Œæ¸¸æˆä¼š
+     *  å› ä¸ºæ‰¾ä¸åˆ?PokiSDK è€ŒæŠ¥é”™æˆ–å¡ä½ã€?     *
+     * ã€æ¨¡æ‹ŸåŽŸåˆ™ã€?     *  - æ‰€æœ‰æ–¹æ³•éƒ½æœ‰è¿”å›žå€¼ï¼Œä¸è®©æ¸¸æˆè°ƒç”¨æ—¶æŠ¥é”?     *  - å¹¿å‘Šç›¸å…³æ–¹æ³•æ¨¡æ‹Ÿ"æ’­æ”¾å®Œæˆ"ï¼Œæ¸¸æˆå¯ä»¥æ­£å¸¸ç»§ç»?     *  - äº‹ä»¶ä¸ŠæŠ¥æ–¹æ³•ä¸ºç©ºå®žçŽ°ï¼Œä¸å½±å“æ¸¸æˆé€»è¾‘
+     *  - å¥–åŠ±å¹¿å‘Šï¼ˆrewardedBreakï¼‰è¿”å›?trueï¼Œè®©çŽ©å®¶æ‹¿åˆ°å¥–åŠ±
+     */
+    window.PokiSDK = {
+        init: function() { return Promise.resolve(); },
+        setDebug: function() {},
+        gameLoadingStart: function() {},
+        gameLoadingProgress: function() {},
+        gameLoadingFinished: function() {},
+        gameplayStart: function() {},
+        gameplayStop: function() {},
+        // æ™®é€šæ’å±å¹¿å‘Šï¼š1ç§’åŽæ¨¡æ‹Ÿæ’­æ”¾å®Œæˆ
+        commercialBreak: function() {
+            return new Promise(function(r) { setTimeout(r, 1000); });
+        },
+        // æ¿€åŠ±å¹¿å‘Šï¼š1.5ç§’åŽæ¨¡æ‹Ÿè§‚çœ‹å®Œæˆï¼Œè¿”å›?trueï¼ˆçŽ©å®¶èŽ·å¾—å¥–åŠ±ï¼‰
+        rewardedBreak: function() {
+            return new Promise(function(r) {
+                setTimeout(function() { r(true); }, 1500);
+            });
+        },
+        isAdBlocked: function() { return Promise.resolve(false); },
+        getURLParameter: function() { return null; },
+        shareableURL: function() { return Promise.resolve(location.href); },
+        captureErrors: function() {}
+    };
+
+    // æ ‡è®° Poki SDK å·²å°±ç»ªï¼ˆæ¸¸æˆä¼šæ£€æŸ¥è¿™ä¸ªå˜é‡ï¼‰
+    window.pokiReady = true;
+
+    /**
+     * åˆå§‹åŒ?Poki æ¡¥æŽ¥
+     * æ¸¸æˆå¯åŠ¨æ—¶ä¼šè°ƒç”¨æ­¤å‡½æ•°ï¼Œä¼ å…¥ Unity ä¸­çš„æ¡¥æŽ¥å¯¹è±¡å?     * æˆ‘ä»¬åœ¨è¿™é‡Œæ³¨å†Œå¹¿å‘Šå›žè°ƒï¼Œè®?Unity å’?JS èƒ½å¤ŸåŒå‘é€šä¿¡
+     *
+     * @param {string} name - Unity åœºæ™¯ä¸­æ¡¥æŽ¥å¯¹è±¡çš„åç§°
+     */
+    window.initPokiBridge = function(name) {
+        window.pokiBridge = name;
+
+        // æ™®é€šå¹¿å‘Šï¼šæ’­æ”¾å®ŒæˆåŽé€šçŸ¥ Unity
+        window.commercialBreak = function() {
+            window.PokiSDK.commercialBreak().then(function() {
+                window.unityGame && window.unityGame.SendMessage(name, "commercialBreakCompleted");
+            });
+        };
+
+        // æ¿€åŠ±å¹¿å‘Šï¼šæ’­æ”¾å®ŒæˆåŽé€šçŸ¥ Unityï¼Œå¹¶ä¼ é€’æ˜¯å¦çœ‹å®?        window.rewardedBreak = function() {
+            window.PokiSDK.rewardedBreak().then(function(e) {
+                window.unityGame && window.unityGame.SendMessage(name, "rewardedBreakCompleted", e.toString());
+            });
+        };
+
+        // é€šçŸ¥ Unityï¼šPoki SDK å·²å‡†å¤‡å°±ç»?        window.unityGame && window.unityGame.SendMessage(name, "ready");
+    };
+
+    /* =========================================================
+     *  æ— é™é‡‘å¸ï¼ˆä¿®æ”?IndexedDB ä¸­çš„ PlayerPrefsï¼?     * =========================================================
+     *
+     *  åŽŸç†ï¼šUnity WebGL ç”?IndexedDB å­?PlayerPrefsï¼?idbfs/FILE_DATAï¼‰ã€?     *  Unity å¯åŠ¨æ—¶æŠŠ PlayerPrefs è¯»åˆ°å†…å­˜é‡Œï¼Œä¹‹åŽåªç”¨å†…å­˜çš„å‰¯æœ¬ï¼Œ
+     *  æ‰€ä»¥å¿…é¡»åœ¨ Unity å¯åŠ¨ä¹‹å‰æ”¹æ•°æ®åº“ï¼ŒçŽ©å®¶æ‰èƒ½çœ‹åˆ°æ»¡é‡‘å¸ã€?     *
+     *  å¯åŠ¨å‰ç­–ç•¥ï¼š
+     *    ç”?indexedDB.databases() æ£€æŸ¥æ•°æ®åº“æ˜¯å¦å­˜åœ¨ï¼ˆæ— å‰¯ä½œç”¨ï¼‰
+     *    - å­˜åœ¨ï¼šå…ˆæ”¹é‡‘å¸ï¼Œå†å¯åŠ?Unity â†?çŽ©å®¶çœ‹åˆ° 999999
+     *    - ä¸å­˜åœ¨ï¼šä¸ç¢°æ•°æ®åº“ï¼Œç›´æŽ¥å¯åŠ¨ â†?Unity è‡ªå·±åˆ›å»ºå…¨æ–°çš„ï¼Œä¸ä¼šå´?     *
+     *  è¿è¡Œæ—¶ï¼šæ¯?15 ç§’è¡¥ä¸€æ¬¡ï¼Œé˜²æ­¢çŽ©å®¶èŠ±é‡‘å¸åŽè¢«æ¸¸æˆä¿å­˜è¦†ç›–ã€?     *  ï¼ˆè¿è¡Œæ—¶æ”¹çš„æ˜¯æ•°æ®åº“ï¼Œå†…å­˜é‡Œçš„å€¼ä¸å˜ï¼Œä½†ä¸‹æ¬¡å¯åŠ¨ä¼šç”Ÿæ•ˆï¼?     *
+     *  PlayerPrefs äºŒè¿›åˆ¶æ ¼å¼ï¼ˆé‡‘å¸å­—æ®µï¼‰ï¼š
+     *    05 43 6F 69 6E 73 FE [4å­—èŠ‚å°ç«¯åºint]
+     *    â†? â†?             â†? â†?     *    |  "Coins"        |  é‡‘å¸å€?     *    é”®åé•¿åº¦5         intç±»åž‹æ ‡è®°
+     *
+     *  æ³¨æ„ï¼šcontents å¿…é¡»ä¿æŒåŽŸå§‹ç±»åž‹ï¼ˆUint8Array æˆ?ArrayBufferï¼‰ï¼Œ
+     *  æ”¹åç±»åž‹ä¼šå¯¼è‡?Unity "invalid handle for stdin" å´©æºƒã€?     */
+    function patchCoins(callback) {
+        try {
+            var req = indexedDB.open('/idbfs');
+            req.onsuccess = function(e) {
+                var db = e.target.result;
+                try {
+                    if (!db.objectStoreNames.contains('FILE_DATA')) {
+                        db.close(); callback && callback(false); return;
+                    }
+                    var tx = db.transaction('FILE_DATA', 'readwrite');
+                    var store = tx.objectStore('FILE_DATA');
+                    store.getAllKeys().onsuccess = function() {
+                        var keys = this.result, pk = null;
+                        for (var i = 0; i < keys.length; i++) {
+                            if (typeof keys[i] === 'string' &&
+                                keys[i].indexOf('PlayerPrefs') !== -1) {
+                                pk = keys[i]; break;
+                            }
+                        }
+                        if (!pk) { db.close(); callback && callback(false); return; }
+
+                        store.get(pk).onsuccess = function(ev) {
+                            var obj = ev.target.result;
+                            if (!obj || !obj.contents) {
+                                db.close(); callback && callback(false); return;
+                            }
+
+                            var data = new Uint8Array(obj.contents);
+                            var isAB = obj.contents instanceof ArrayBuffer;
+                            var changed = false;
+
+                            // æ?"Coins" å­—æ®µï¼šé•¿åº?5) + "Coins" + intæ ‡è®°(0xFE)
+                            for (var i = 0; i < data.length - 10; i++) {
+                                if (data[i] === 5 &&
+                                    data[i+1] === 67 && data[i+2] === 111 &&
+                                    data[i+3] === 105 && data[i+4] === 110 &&
+                                    data[i+5] === 115 && data[i+6] === 0xFE) {
+
+                                    var vi = i + 7;
+                                    var cur = data[vi] | (data[vi+1]<<8) |
+                                              (data[vi+2]<<16) | (data[vi+3]<<24);
+
+                                    if (cur < 990000) {
+                                        // 999999 = 0x000F423F å°ç«¯åº?                                        data[vi] = 0x3F; data[vi+1] = 0x42;
+                                        data[vi+2] = 0x0F; data[vi+3] = 0x00;
+                                        changed = true;
+                                    }
+                                    break;
+                                }
+                            }
+
+                            if (changed) {
+                                obj.contents = isAB ? data.buffer : data;
+                                obj.timestamp = new Date();
+                                store.put(obj, pk);
+                            }
+                            db.close();
+                            callback && callback(changed);
+                        };
+                    };
+                } catch(err) { db.close(); callback && callback(false); }
+            };
+            req.onupgradeneeded = function(e) {
+                // æ•°æ®åº“ä¸å­˜åœ¨/ç‰ˆæœ¬ä¸å¯¹ â†?ä¸­æ­¢ï¼Œè®© Unity è‡ªå·±åˆ›å»º
+                e.target.transaction.abort();
+                callback && callback(false);
+            };
+        } catch(e) { callback && callback(false); }
+    }
+
+    /* â”€â”€ å¯åŠ¨å‰æ£€æŸ¥å¹¶è¡¥é‡‘å¸?â”€â”€
+       ç”?indexedDB.databases() å…ˆæ£€æŸ¥æ˜¯å¦å­˜åœ¨ï¼Œ
+       å­˜åœ¨æ‰æ”¹ï¼ˆä¸ä¼šåˆ›å»ºæ–°æ•°æ®åº“ï¼‰ï¼Œä¸å­˜åœ¨ç›´æŽ¥å¯åŠ¨ã€?*/
+    function startGame() {
+        if (indexedDB.databases) {
+            indexedDB.databases().then(function(dbs) {
+                var exists = false;
+                for (var i = 0; i < dbs.length; i++) {
+                    if (dbs[i].name === '/idbfs') { exists = true; break; }
+                }
+                if (exists) {
+                    patchCoins(function() { initUnity(); });
+                } else {
+                    initUnity();
+                }
+            });
+        } else {
+            // è€æµè§ˆå™¨ä¸æ”¯æŒ?databases()ï¼Œç›´æŽ¥å¯åŠ?            initUnity();
+        }
+    }
+
+    function initUnity() {
+    // ç§»åŠ¨ç«¯å…¼å®¹é…ç½?    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+    var unityParams = {
+        onProgress: function(inst, p) {
+            var pct = Math.round(p * 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('loadingText').textContent = 'Loading... ' + pct + '%';
+        },
+
+        Module: {
+            TOTAL_MEMORY: isMobile ? 256 * 1024 * 1024 : 512 * 1024 * 1024,
+
+            locateFile: function(path) {
+                return "Build-github/" + path;
+            },
+
+            onRuntimeInitialized: function() {
+                setTimeout(function() {
+                    var el = document.getElementById('loading');
+                    el.style.opacity = '0';
+                    setTimeout(function() { el.style.display = 'none'; }, 500);
+                }, 800);
+
+                // è¿è¡Œæ—¶æ¯ 15 ç§’è¡¥ä¸€æ¬¡é‡‘å¸?                setInterval(function() { patchCoins(); }, 15000);
+            }
+        }
+    };
+
+    // ç§»åŠ¨ç«¯ï¼šä¼˜å…ˆç”?WebGL 1.0ï¼ˆå…¼å®¹æ€§æ›´å¥½ï¼Œå‡å°‘é»‘å±æ¦‚çŽ‡ï¼?    // æ¡Œé¢ç«¯ï¼šæ­£å¸¸ç”?WebGL 2.0
+    if (isMobile) {
+        unityParams.Module.preferredWebGLVersion = 1;
+    }
+
+    // 设置 window.config 避免 UnityLoader 报 cachedDecompressedFileSizes 错误
+    window.config = window.config || { cachedDecompressedFileSizes: {} };
+    window.unityGame = UnityLoader.instantiate(
+        "gameContainer",
+        "Build-github/ppw.json?v=24012020",
+        unityParams
+    );
+    }
+
+    // å¼€å§‹æ¸¸æˆï¼ˆå…ˆæ£€æŸ¥å¹¶è¡¥é‡‘å¸ï¼Œå†å¯åŠ?Unityï¼?    startGame();
+    </script>
+</body>
+</html>
